@@ -1,12 +1,12 @@
 
 const User = require("../models/userModel")
-const jwt = require("jsonwebtoken")
 const asyncHandler = require('express-async-handler')
-const generateToken = require('../utils/generateToken')
-const { validationResult } = require("express-validator");
-const sgMail = require('@sendgrid/mail'); 
-sgMail.setApiKey('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');
-const passwordStrength = require('check-password-strength');
+const { validationResult } = require("express-validator")
+const sgMail = require('@sendgrid/mail')
+sgMail.setApiKey('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')
+const passwordStrength = require('check-password-strength')
+const jwt = require('jsonwebtoken')
+require('dotenv').config();
 
 exports.register = asyncHandler(async (req, res) => {
     
@@ -22,9 +22,9 @@ exports.register = asyncHandler(async (req, res) => {
     const emailExists = await User.findOne({email});
     const usernameExists = await User.findOne({username});
 
-    if(emailExists){
+    if(password != confirm_password){
         res.status(401);
-        throw new Error("This email is already used.");
+        throw new Error("Password did not match");
     }
 
     if(usernameExists){
@@ -32,13 +32,12 @@ exports.register = asyncHandler(async (req, res) => {
         throw new Error("Username is already taken.");
     }
 
-    const strength = passwordStrength(password);
-    console.log(strength.value);
-
-    if(password != confirm_password){
+    if(emailExists){
         res.status(401);
-        throw new Error("Password did not match");
+        throw new Error("This email is already used.");
     }
+
+    const strength = passwordStrength(password);
     
     if(strength.length > 72){
         res.status(401);
@@ -57,6 +56,16 @@ exports.register = asyncHandler(async (req, res) => {
         role: "Subscriber",
     });
 
+
+    const token = jwt.sign({
+        email
+    },
+    process.env.JWT_ACCOUNT_ACTIVATION,
+    {
+        expiresIn: '1h'
+    }
+    )
+
     try{
         await user.save();
         res.status(200);
@@ -65,4 +74,28 @@ exports.register = asyncHandler(async (req, res) => {
         console.log(err);
     }
 
+    const emailData = {
+        from: process.env.EMAIL_FROM,
+        to: email,
+        subject: 'Account activation Link',
+        html: `
+                <h1>Please use the following Link to Activate your Account</h1>
+                <p>${process.env.CLIENT_URL}/user/verify?token=${token}</p>
+                <hr />
+                <p>This Email Contains Sensitive Information</p>
+                <p>${process.env.CLIENT_URL}</p>
+              `
+      };
+
+      sgMail
+       .send(emailData)
+       .then(sent => {
+         return res.json({
+           message: `Email has been sent to ${email}`
+         });
+       })
+       .catch(error => {
+         res.status(400)
+         throw new Error(error)
+       });
 })

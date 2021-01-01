@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs')
 
 const userSchema = mongoose.Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
     },
@@ -16,14 +16,15 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    isStudent: {
-      type: Boolean,
+    status: {
+      type: String,
       required: true,
-      default: 'true',
-     }
-  },
-  {
-    timestamps: true,
+      default: "Inactive",
+    },
+    role: {
+      type: String,
+      required: true,
+    },
   }
 )
 

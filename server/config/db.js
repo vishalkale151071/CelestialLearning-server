@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     try {
           const conn = await mongoose.connect(
-            'mongodb+srv://rootuser:root@crud.pvs1y.mongodb.net/test?authSource=admin&replicaSet=atlas-z3st35-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true',
+            'mongodb+srv://vishal:varshakale@cluster0.eafvy.azure.mongodb.net/celestiallearning?retryWrites=true&w=majority',
             {
                 useUnifiedTopology: true,
                 useNewUrlParser: true,

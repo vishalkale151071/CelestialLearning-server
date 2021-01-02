@@ -118,26 +118,38 @@ exports.verify = asyncHandler(async (req, res) => {
 
     const { token } = req.body
 
-    jwt.verify(token, process.env.JWT_SECRET, (err) => {
+    jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, (err) => {
         if(err){
             res.status(401)
             throw new Error("Token expires or invalid")
         }else{
             const { email } = jwt.decode(token);
-                User.updateOne(
-                    {email:email},
-                    {status: "Active"},
-                    (err) => {
-                        if(err){
-                            console.log(err)
+            const filter = {email: email}
+            const update = {status: "Active"}
+            
+            User.findOneAndUpdate(filter,update,
+                {
+                    useFindAndModify: false,
+                    new: true
+                },
+                (err, doc) => {
+                    if(err){
+                        console.log(err)
+                        res.json({
+                            msg: "Uregisterd token." 
+                        })
+                    }
+                    else{
+                        if(doc){
+                            res.json({ msg: "User Activated." })
                         }
                         else{
-                            res.json({
-                                "msg": "User Activated."
-                            })
+                                res.json({ msg: "Unregistred Token." })
                         }
                     }
-                )
+                }
+            )
+
         }
     })
 })

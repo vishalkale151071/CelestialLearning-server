@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs');
+const connectDB = require('../config/db');
 
 const userSchema = mongoose.Schema(
   {
@@ -44,6 +45,11 @@ userSchema.pre('save', async function (next) {
   const salt = await bcrypt.genSalt(10)
   this.password = await bcrypt.hash(this.password, salt)
 })
+
+userSchema.pre('updateOne', async function(next) {
+  const salt = await bcrypt.genSalt(10)
+  this._update.password = await bcrypt.hash(this._update.password, salt)
+ })
 
 const User = mongoose.model('User', userSchema)
 

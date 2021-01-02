@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router() 
 const { check } = require("express-validator");
-const { register, verify } = require('../controller/subscriberController');
+const { register, verify ,login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
 
 
 router.post(
@@ -22,7 +22,35 @@ router.post(
     verify
 );
 
+router.post(
+    '/forgetpasswordverify',
+    [
+        check("token", "Token is not present.")
+    ],
+    forgetpasswordverify
+);
+router.post(
+    '/login',
+    [
+        check("email", "Email should not be empty.").isEmail(),
+        check("password","Password field is required.")
+    ], login
+);
 
+router.post(
+    '/forgetpassword',
+    [
+        check("email","Email should not be empty.").isEmail(),
+    ], forgetpassword
+);
 
-
+router.post(
+    '/updatepassword',
+    [
+        
+        check("new_password","Password is weak.").isStrongPassword(),
+        check("confirm_password","Passwords do not match."),
+        check("token", "Token is not present."),
+    ], updatepassword
+);
 module.exports = router

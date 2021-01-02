@@ -3,10 +3,11 @@ const User = require("../models/userModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
-sgMail.setApiKey('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')
 const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
+const e = require("express")
 require('dotenv').config();
+sgMail.setApiKey(process.env.SENDGRID_API)
 
 exports.register = asyncHandler(async (req, res) => {
     
@@ -56,30 +57,31 @@ exports.register = asyncHandler(async (req, res) => {
         role: "Subscriber",
     });
 
-
-    const token = jwt.sign({
+    const token = jwt.sign(
+        {
         email
-    },
-    process.env.JWT_ACCOUNT_ACTIVATION,
-    {
-        expiresIn: '1h'
-    }
+        },
+        process.env.JWT_ACCOUNT_ACTIVATION,
+        {
+            expiresIn: '1h'
+        }
     )
 
     try{
         await user.save();
         res.status(200);
-        res.send("User data saved.");
+        console.log("User data saved.");
     }catch(err){
         console.log(err);
     }
-
+    /*
     const emailData = {
         from: process.env.EMAIL_FROM,
         to: email,
         subject: 'Account activation Link',
         html: `
                 <h1>Please use the following Link to Activate your Account</h1>
+                <p>Please use the following pin to activate the account <b>${pin}</b> </p>
                 <p>${process.env.CLIENT_URL}/user/verify?token=${token}</p>
                 <hr />
                 <p>This Email Contains Sensitive Information</p>
@@ -91,11 +93,51 @@ exports.register = asyncHandler(async (req, res) => {
        .send(emailData)
        .then(sent => {
          return res.json({
-           message: `Email has been sent to ${email}`
+           message: `Email has been sent to ${email} ${token}`
          });
        })
        .catch(error => {
          res.status(400)
          throw new Error(error)
        });
+       */
+      return res.json({
+          "token" : token
+      })
+})
+
+exports.verify = asyncHandler(async (req, res) => {
+    const error = validationResult(req);
+
+    if(!error.isEmpty())
+    {
+        res.status(401)
+        throw new Error("Token is missing")
+    }
+
+    const { token } = req.body
+
+    jwt.verify(token, process.env.JWT_ACCOUNT_ACTIVATION, (err) => {
+        if(err){
+            res.status(401)
+            throw new Error("Token expires or invalid")
+        }else{
+            const { email } = jwt.decode(token);
+            User.updateOne(
+                {email:email},
+                {status: "Active"},
+                (err) => {
+                    if(err){
+                        console.log(err)
+                    }
+                    else{
+                        res.json({
+                            "msg": "User Activated."
+                        })
+                    }
+                }
+            )
+
+        }
+    })
 })

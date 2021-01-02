@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
 const connectDB = async () => {
     try {
           const conn = await mongoose.connect(
-            'mongodb+srv://vishal:varshakale@cluster0.eafvy.azure.mongodb.net/celestiallearning?retryWrites=true&w=majority',
+            process.env.MONGO_URI,
             {
                 useUnifiedTopology: true,
                 useNewUrlParser: true,

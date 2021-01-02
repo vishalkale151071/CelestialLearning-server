@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-const userRoutes = require('./routes/userRoutes');
 const subscriberRoutes = require('./routes/subscriberRouts');
 
 connectDB() ;
@@ -17,7 +16,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json())
-app.use('/api/users', userRoutes);
 app.use('/subscriber', subscriberRoutes);
 
 

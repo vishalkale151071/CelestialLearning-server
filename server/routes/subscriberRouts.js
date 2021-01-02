@@ -1,23 +1,8 @@
 const express = require('express')
 const router = express.Router() 
 const { check } = require("express-validator");
-const {login , signup , verify } = require('../controller/userController');
-const { register } = require('../controller/subscriberController');
-const verifyMiddleware = require('../middleware/verifyMiddleware'); 
-// router.post('/signup',[
-//      check("name", "name should be at least 3 char").isLength({ min: 3 }),
-//      check("email", "email is required").isEmail(),
-//      check("password", "password should be at least 6 char").isLength({ min: 6 })
-// ],signup)
+const { register, verify } = require('../controller/subscriberController');
 
-
-
-// router.post('/login', 
-// check("email", "email is required").isEmail(),
-// check("password", "password field is required").isLength({ min: 1 }),login)
-
-
-// router.post("/verify",verifyMiddleware,verify); 
 
 router.post(
     '/register',
@@ -27,6 +12,14 @@ router.post(
         check("password", "Weak password.").isStrongPassword(),
         check("confirm-password", "password did not match")
     ], register
+);
+
+router.post(
+    '/verify',
+    [
+        check("token", "Token is not present.")
+    ],
+    verify
 );
 
 

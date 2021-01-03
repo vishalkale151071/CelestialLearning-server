@@ -1,14 +1,14 @@
 const express = require('express')
 const router = express.Router() 
 const { check } = require("express-validator");
-const { register, verify ,login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
+const { register, verify ,login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 
 
 router.post(
     '/register',
     [
         check("username", "username should not be empty."),
-        check("email", "Email should not be empty.").isEmail(),
+        check("email", "Please enter valid email address.").isEmail(),
         check("password", "Weak password.").isStrongPassword(),
         check("confirm-password", "password did not match")
     ], register
@@ -46,8 +46,7 @@ router.post(
 
 router.post(
     '/updatepassword',
-    [
-        
+    [    
         check("new_password","Password is weak.").isStrongPassword(),
         check("confirm_password","Passwords do not match."),
         check("token", "Token is not present."),

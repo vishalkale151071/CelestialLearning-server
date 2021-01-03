@@ -6,8 +6,8 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
-const subscriberRoutes = require('./routes/subscriberRouts');
-
+const subscriberRoutes = require('./routes/subscriberRoutes');
+const authorRoutes = require('./routes/authorRoutes');
 connectDB() ;
 
 const app = express();
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json())
 app.use('/subscriber', subscriberRoutes);
-
+app.use('/author', authorRoutes);
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));

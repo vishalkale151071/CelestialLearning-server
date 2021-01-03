@@ -1,4 +1,4 @@
-const Subscriber = require("../models/subscriberModel")
+const Author = require("../models/authorModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
@@ -6,6 +6,7 @@ const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
 const e = require("express")
 const { token } = require("morgan")
+const { findOne } = require("../models/authorModel")
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 
@@ -22,8 +23,8 @@ exports.register = asyncHandler(async (req, res) => {
 
     const { username, email, password, confirm_password } = req.body;
 
-    const emailExists = await Subscriber.findOne({email});
-    const usernameExists = await Subscriber.findOne({username});
+    const emailExists = await Author.findOne({email});
+    const usernameExists = await Author.findOne({username});
 
     if(password != confirm_password){
         res.status(401);
@@ -63,11 +64,11 @@ exports.register = asyncHandler(async (req, res) => {
         })
     }
 
-    const user = new Subscriber({
+    const author = new Author({
         username: username,
         email: email,
         password: password,
-        role: "Subscriber",
+        role: "Author",
     });
 
     const token = jwt.sign(
@@ -87,7 +88,7 @@ exports.register = asyncHandler(async (req, res) => {
         html: `
                 <h1>Please use the following Link to Activate your Account</h1>
             
-                <p>${process.env.CLIENT_URL}/subscriber/verify?token=${token}</p>
+                <p>${process.env.CLIENT_URL}/author/verify?token=${token}</p>
                 <hr />
                 <p>This Email Contains Sensitive Information</p>
                 <p>${process.env.CLIENT_URL}</p>
@@ -99,9 +100,9 @@ exports.register = asyncHandler(async (req, res) => {
        .then(async sent => {
             try
             {
-                await user.save();
+                await author.save();
                 res.status(200);
-                console.log("User data saved.");
+                console.log("Author data saved.");
             }
             catch(err)
             {
@@ -144,54 +145,47 @@ exports.verify = asyncHandler(async (req, res) => {
         else
         {
             const { email } = jwt.decode(token);
-            const subscriber = await Subscriber.findOne({email});
-            if(subscriber)
-            {
-                if(subscriber.status=="Inactive")
-                {       
-                    const filter = {email: email}
-                    const update = {status: "Active"}
-                
-                    Subscriber.findOneAndUpdate(filter,update,
-                    {
-                        useFindAndModify: false,
-                        new: true
-                    },
-                        (err, doc) => {
-                            if(err){
-                                console.log(err)
-                                res.json({
-                                    msg: "Unregistered token." 
-                                })
+            const author = await Author.findOne({email});
+            if(author.status=="Inactive")
+            {       
+                const filter = {email: email}
+                const update = {status: "Active"}
+            
+                Author.findOneAndUpdate(filter,update,
+                {
+                    useFindAndModify: false,
+                    new: true
+                },
+                    (err, doc) => {
+                        if(err){
+                            console.log(err)
+                            res.json({
+                                msg: "Unregistered token." 
+                            })
+                        }
+                        else{
+                            if(doc){
+                                res.json({ msg: "Author Activated." })
                             }
                             else{
-                                if(doc){
-                                    res.json({ msg: "Subscriber Activated." })
-                                }
-                                else{
-                                        res.json({ msg: "Unregistered Token." })
-                                }
+                                    res.json({ msg: "Unregistered Token." })
                             }
                         }
-                    )
-                }
-                else
-                {
-                    return res.json({
-                        "msg" : "You have already activated your account.",
-                    })
-                }
+                    }
+                )
             }
             else
             {
                 return res.json({
-                    "msg" : "This email does not exist",
+                    "msg" : "You have already activated your account.",
                 })
             }
-            }
-            
+        }
     })
 })
+    
+    
+
 
 exports.login = asyncHandler(async(req,res) => {
     const error = validationResult(req);
@@ -206,9 +200,9 @@ exports.login = asyncHandler(async(req,res) => {
 
     const {email,password} = req.body;
     
-    const user = await Subscriber.findOne({email});
+    const author = await Author.findOne({email});
 
-    if(!user)
+    if(!author)
     {
         res.status(404);
         return res.json({
@@ -216,9 +210,9 @@ exports.login = asyncHandler(async(req,res) => {
         })
         
     }
-    if(user && (await user.matchPassword(password)))
+    if(author && (await author.matchPassword(password)))
     {
-        if(await user.status == "Active")
+        if(await author.status == "Active")
         {
             const token = jwt.sign(
                 {
@@ -231,7 +225,7 @@ exports.login = asyncHandler(async(req,res) => {
             )        
             return res.json({
                 "msg" : " You are logged in successfully.",
-                "_id" : await user.id,
+                "_id" : await author.id,
                 "token" : token,
             })
         }
@@ -264,8 +258,8 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
 
     const {email} = req.body;
     
-    const user = await Subscriber.findOne({email});
-    if(!user)
+    const author = await Author.findOne({email});
+    if(!author)
     {
         res.status(404);
         return res.json({
@@ -291,7 +285,7 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
             html: `
                     <h1>Please use the following Link to reset your password</h1>
                     
-                    <p>${process.env.CLIENT_URL}/subscriber/verify?token=${token}</p>
+                    <p>${process.env.CLIENT_URL}/author/verify?token=${token}</p>
                     <hr />
                     <p>This Email Contains Sensitive Information</p>
                     <p>${process.env.CLIENT_URL}</p>
@@ -385,7 +379,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
     }
     const { email } = jwt.decode(token);
 
-    Subscriber.updateOne(
+    Author.updateOne(
                     {email:email},
                     {password: new_password},
                     (err) => {

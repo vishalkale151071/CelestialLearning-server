@@ -18,7 +18,7 @@ exports.register = asyncHandler(async (req, res) => {
     if(!errors.isEmpty()){
         res.status(401);
         return res.json({
-            "msg" : errors.array()[0].msg,
+            message : errors.array()[0].msg,
         })   
     }
 
@@ -30,21 +30,21 @@ exports.register = asyncHandler(async (req, res) => {
     if(password != confirm_password){
         res.status(401);
         return res.json({
-            "msg" : "Password did not match",
+            message : "Password did not match",
         }) 
     }
 
     if(usernameExists){
         res.status(401);
         return res.json({
-            "msg" : "Username is already taken.",
+            message : "Username is already taken.",
         })
     }
 
     if(emailExists){
         res.status(401);
         return res.json({
-            "msg" : "This email is already used.",
+            message : "This email is already used.",
         })
         
     }
@@ -54,14 +54,14 @@ exports.register = asyncHandler(async (req, res) => {
     if(strength.length > 72){
         res.status(401);
         return res.json({
-            "msg" : "Password is too Long",
+            message : "Password is too Long",
         })
     }
 
     if(strength.value != "Strong"){
         res.status(401);
         return res.json({
-            "msg" : "Weak Password",
+            message : "Weak Password",
         })
     }
 
@@ -129,7 +129,7 @@ exports.verify = asyncHandler(async (req, res) => {
     {
         res.status(401)
         return res.json({
-            "msg" : "Token is missing",
+            message : "Token is missing",
         })
     }
 
@@ -139,7 +139,7 @@ exports.verify = asyncHandler(async (req, res) => {
         {
             res.status(401)
             return res.json({
-                "msg" : "Token expires or invalid",
+                message : "Token expires or invalid",
             })
         }
         else
@@ -177,7 +177,7 @@ exports.verify = asyncHandler(async (req, res) => {
             else
             {
                 return res.json({
-                    "msg" : "You have already activated your account.",
+                    message : "You have already activated your account.",
                 })
             }
         }
@@ -193,7 +193,7 @@ exports.login = asyncHandler(async(req,res) => {
     {
         res.status(401)
         return res.json({
-            "msg" : "Invalid username",
+            message : "Invalid username",
         })
        
     }
@@ -206,7 +206,7 @@ exports.login = asyncHandler(async(req,res) => {
     {
         res.status(404);
         return res.json({
-            "msg" : "You are not registered.",
+            message : "You are not registered.",
         })
         
     }
@@ -224,7 +224,7 @@ exports.login = asyncHandler(async(req,res) => {
                 }
             )        
             return res.json({
-                "msg" : " You are logged in successfully.",
+                message : " You are logged in successfully.",
                 "_id" : await author.id,
                 "token" : token,
             })
@@ -232,7 +232,7 @@ exports.login = asyncHandler(async(req,res) => {
         else
         {
             res.json({
-                "msg" :"Please activate your account.",
+                message :"Please activate your account.",
             })
         }
         
@@ -240,7 +240,7 @@ exports.login = asyncHandler(async(req,res) => {
     else
     {
         res.json({
-            "msg" : "Incorrect username or password.",
+            message : "Incorrect username or password.",
         })
     }
 });
@@ -251,7 +251,7 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
     {
         res.status(401)
         return res.json({
-            "msg" : "Valid Email id is required.",
+            message : "Valid Email id is required.",
         })
        
     }
@@ -263,7 +263,7 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
     {
         res.status(404);
         return res.json({
-            "msg" : "Incorrect email id. Please enter registered email id.",
+            message : "Incorrect email id. Please enter registered email id.",
         })
        
     }
@@ -315,7 +315,7 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
     {
         res.status(401)
         return res.json({
-            "msg" : "Token is missing",
+            message : "Token is missing",
         })
        
     }
@@ -326,13 +326,13 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
         if(err){
             res.status(401)
             return res.json({
-                "msg" : "Token expires or invalid",
+                message : "Token expires or invalid",
             })
             
         }else{
             const { email } = jwt.decode(token);
             return res.json({
-                "msg" : "success",
+                message : "success",
                 "token": token,
             })
         }
@@ -345,7 +345,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
     if(!errors.isEmpty()){
         res.status(401);
         return res.json({
-            "msg" : errors.array()[0].msg,
+            message : errors.array()[0].msg,
         })
         
     }
@@ -356,7 +356,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
     {
         res.status(404);
         return res.json({
-            "msg" : "Passwords do not match.",
+            message : "Passwords do not match.",
         })
         
     }
@@ -365,7 +365,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
     if(strength.length > 72){
         res.status(401);
         return res.json({
-            "msg" : "Password is too Long",
+            message : "Password is too Long",
         })
        
     }
@@ -373,7 +373,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
     if(strength.value != "Strong"){
         res.status(401);
         return res.json({
-            "msg" : "Weak Password",
+            message : "Weak Password",
         })
        
     }
@@ -388,7 +388,7 @@ exports.updatepassword = asyncHandler(async(req,res) =>{
                         }
                         else{
                             res.json({
-                                "msg": "Password changed",
+                                message: "Password changed",
                             })
                         }
                     }

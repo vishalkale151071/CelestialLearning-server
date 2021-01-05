@@ -13,7 +13,7 @@ exports.profile = asyncHandler(async (req, res) => {
     if(!errors.isEmpty()){
         res.status(401);
         return res.json({
-            "msg" : errors.array()[0].msg,
+            message : errors.array()[0].msg,
         })   
     }
 
@@ -23,7 +23,7 @@ exports.profile = asyncHandler(async (req, res) => {
         {
             res.status(401)
             return res.json({
-                "msg" : "Token expires or invalid",
+                message : "Token expires or invalid",
             })
         }
         else
@@ -66,16 +66,25 @@ exports.update = asyncHandler(async (req, res) => {
     const _id = subscriber.profile_id; 
     const profile = await SubscriberProfile.findOne({_id});
     const filter = {_id: await profile._id}
-    const update = {firstName: firstName,middleName:middleName,lastName:lastName,phNum:phNum,linkedInURL:linkedInURL,twitterURL:twitterURL,higherEducation:higherEducation,areaOfInterest:areaOfInterest}
-    await SubscriberProfile.findOneAndUpdate(filter,update,
-        {
-            useFindAndModify: false,
-            new: true
-        },
-    )
-    return res.json({
-        "message" : "profile updated successfully"
-    })
+    if(profile)
+    {
+        const update = {firstName: firstName,middleName:middleName,lastName:lastName,phNum:phNum,linkedInURL:linkedInURL,twitterURL:twitterURL,higherEducation:higherEducation,areaOfInterest:areaOfInterest}
+        await SubscriberProfile.findOneAndUpdate(filter,update,
+            {
+                useFindAndModify: false,
+                new: true
+            },
+        )
+        return res.json({
+            message : "profile updated successfully"
+        })
+    }
+    else
+    {
+        return res.json({
+            message : "no such author exists.",
+        })
+    }
     
     
 });

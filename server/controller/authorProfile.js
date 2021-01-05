@@ -76,13 +76,13 @@ exports.update = asyncHandler(async (req, res) => {
             },
         )
         return res.json({
-            "message" : "author profile updated successfully"
+            message : "author profile updated successfully"
         })
     }
     else
     {
         return res.json({
-            "msg" : "no such author exists.",
+            message : "no such author exists.",
         })
     }
     

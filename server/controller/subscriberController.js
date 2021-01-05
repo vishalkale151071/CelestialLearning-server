@@ -233,8 +233,8 @@ exports.login = asyncHandler(async(req,res) => {
                 {
                     expiresIn: '1h'
                 }
-            ) 
-            
+           )
+            req.session.email = email;
             return res.json({
                 "msg" : " You are logged in successfully.",
                 "_id" : await user.id,

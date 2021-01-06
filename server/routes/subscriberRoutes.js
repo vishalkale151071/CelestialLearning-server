@@ -3,14 +3,14 @@ const router = express.Router()
 const { check } = require("express-validator");
 //const auth = require('../middleware/authMiddleware');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
-const { profile, update, emailChange, verify1 } = require('../controller/subscriberProfile');
+const { profile, update, emailChange, verify1, passwordChange } = require('../controller/subscriberProfile');
 
 router.post(
     '/register',
     [
         check("username", "username should not be empty."),
         check("email", "Please enter valid email address.").isEmail(),
-        check("password", "Weak password.").isStrongPassword(),
+        check("password", "Weak password."),
         check("confirm-password", "password did not match")
     ], register
 );
@@ -18,24 +18,9 @@ router.post(
 router.post(
     '/verify',
     [
-        //check("token", "Token is not present."),
     ], verify
 );
 
-router.post(
-    '/verify1',
-    [
-        //check("token", "Token is not present."),
-    ], verify1
-);
-
-router.post(
-    '/forgetpasswordverify',
-    [
-        check("token", "Token is not present.")
-    ],
-    forgetpasswordverify
-);
 router.post(
     '/login',
     [
@@ -52,26 +37,29 @@ router.post(
 );
 
 router.post(
+    '/forgetpasswordverify',
+    [
+        check("token", "Token is not present.")
+    ],
+    forgetpasswordverify
+);
+router.post(
     '/updatepassword',
     [
-
-        check("new_password", "Password is weak.").isStrongPassword(),
+        check("new_password", "Password is weak."),
         check("confirm_password", "Passwords do not match."),
-        check("token", "Token is not present."),
     ], updatepassword
 );
 
 router.post(
     '/profile',
     [
-
     ], profile
 );
 
 router.post(
     '/update',
     [
-
     ], update
 );
 
@@ -81,4 +69,19 @@ router.post(
         check("new_email", "Email should be valid.").isEmail(),
     ], emailChange
 );
+
+router.post(
+    '/verify1',
+    [
+    ], verify1
+);
+
+router.post(
+    '/passwordchange',
+    [
+        check("old_password", "Password should not be empty"),
+        check("new_password", "Passwrod should not be empty "),
+    ], passwordChange
+);
+
 module.exports = router

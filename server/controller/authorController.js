@@ -1,13 +1,9 @@
 const { Author } = require("../models/authorModel")
-const { AuthorProfile } = require("../models/authorModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
 const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
-const e = require("express")
-const { token } = require("morgan")
-const { findOne } = require("../models/authorModel")
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 

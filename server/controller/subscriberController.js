@@ -119,10 +119,6 @@ exports.register = asyncHandler(async (req, res) => {
          res.status(400)
          throw new Error(error)
        });
-       
-      /*return res.json({
-          "token" : token
-      })*/
 })
 
 exports.verify = asyncHandler(async (req, res) => {
@@ -290,7 +286,7 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
                 expiresIn: '1h'
             }
         )
-        /*const emailData = {
+        const emailData = {
             from: process.env.EMAIL_FROM,
             to: email,
             subject: 'Password reset Link',
@@ -314,7 +310,7 @@ exports.forgetpassword = asyncHandler(async(req,res) => {
            .catch(error => {
              res.status(400)
              throw new Error(error)
-           });*/
+           });
            return res.json({
             "token" : token
         })

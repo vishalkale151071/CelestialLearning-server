@@ -1,5 +1,5 @@
 const { validationResult } = require('express-validator');
-const { Course, Section } = require('../models/courseModel');
+const { Course, Section, Content, Video } = require('../models/courseModel');
 const asyncHandler = require('express-async-handler');
 const { Author } = require("../models/authorModel");
 
@@ -33,13 +33,13 @@ exports.createContent = asyncHandler(async (req, res) => {
         await course.save();
         res.status(200);
         //req.session.courseId =
-            res.json({
-                message: "Course content data saved."
-            });
+        res.json({
+            message: "Course content data saved."
+        });
     }
     catch (err) {
         res.json({
-            message: "Error",
+            message: `Error ${err}`,
         })
 
     }
@@ -57,24 +57,117 @@ exports.createSection = asyncHandler(async (req, res) => {
             }
         )
     }
-    const { number, sectionName } = req.body;
+    const { number, sectionName, courseId } = req.body;
 
     const section = new Section({
         number: number,
         sectionName: sectionName,
     });
-    console.log(section);
     try {
         await section.save();
+
+        const sectionID = section._id;
+        const course = await Course.findOne({ _id: courseId });
+
+        if (course.content) {
+            console.log(course)
+            const content = await Content.findOne({ _id: course.content._id })
+            console.log(content)
+            await content.section.push(sectionID);
+            await content.save()
+        } else {
+            const content = new Content();
+            await content.section.push(sectionID);
+            await content.save()
+            await Course.updateOne({ _id: courseId }, { content: content._id });
+        }
+
         res.status(200);
-        res.json({
+        return res.json({
             message: "Course section data saved."
         });
     }
     catch (err) {
-        res.json({
-            message: "Error",
+        return res.json({
+            message: `Error ${err}`,
         })
 
     }
+});
+
+exports.myCourses = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400);
+        return res.json({
+            message: errors.array()[0].msg
+        });
+    }
+
+    const email = req.session.email;
+    const author = await Author.findOne({ email });
+    const courses = await Course.find({ author: author._id });
+
+    res.json({
+        data: courses
+    })
+});
+
+exports.courseSections = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400);
+        return res.json({
+            message: errors.array()[0].msg
+        });
+    }
+
+    const { courseId } = req.body;
+
+    const course = await Course.findOne({ _id: courseId });
+
+    const content = await Content.findOne(course.content._id);
+
+    const sections = content.section;
+
+    const sectionData = []
+
+    for (i = 0; i < sections.length; i++) {
+        const sdata = await Section.findOne({ _id: sections[i] });
+        sectionData.push(sdata);
+    }
+    return res.json({
+        sections: sectionData
+    });
+});
+
+exports.uploadVideo = asyncHandler(async (req, res) => {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400);
+        return res.json({
+            message: errors.array()[0].msg
+        });
+    }
+
+    const { videoName, sectionId } = req.body;
+
+    const video = new Video({
+        name: videoName,
+    });
+    await video.save();
+
+    const section = await Section.findOne({ _id: sectionId });
+    console.log(section)
+    await section.video.push(video._id);
+    await section.save()
+
+    res.status(200);
+    return res.json({
+        message: "video is added."
+    });
+
 });

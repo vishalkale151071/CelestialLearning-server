@@ -8,9 +8,11 @@ const videoSchema = mongoose.Schema({
     videoSlug: {
         type: String
     }
+}, {
+    versionKey: false,
 });
 
-videoSchema.pre('save' | 'update', async () => {
+videoSchema.pre('save', async function () {
     this.videoSlug = slug(this.name);
 });
 
@@ -33,6 +35,8 @@ const sectionSchema = mongoose.Schema({
         type: String
     }
 
+}, {
+    versionKey: false,
 });
 
 sectionSchema.pre('save', async function (next) {
@@ -50,7 +54,9 @@ const contentSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Section'
         }]
-    }
+    }, {
+    versionKey: false,
+}
 );
 
 const Content = new mongoose.model('Content', contentSchema);
@@ -87,9 +93,11 @@ const courseSchema = mongoose.Schema(
         },
         content: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Content'
+            ref: 'Content',
         }
-    }
+    }, {
+    versionKey: false,
+}
 );
 
 courseSchema.pre('save', async function (next) {

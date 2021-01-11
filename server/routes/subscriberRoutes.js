@@ -11,7 +11,7 @@ router.post(
         check("username", "username should not be empty."),
         check("email", "Please enter valid email address.").isEmail(),
         check("password", "Weak password."),
-        check("confirm-password", "password did not match")
+        check("confirm_password", "password did not match")
     ], register
 );
 

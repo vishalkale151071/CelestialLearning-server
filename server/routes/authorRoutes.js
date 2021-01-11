@@ -3,22 +3,22 @@ const router = express.Router()
 const { check } = require("express-validator");
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 const { profile, update, emailChange, verify1, passwordChange } = require('../controller/authorProfile');
-const { createContent } = require('../controller/authorContentController');
+const { createContent, createSection } = require('../controller/authorContentController');
 
 router.post(
     '/register',
     [
-        check("username", "username should not be empty."),
+        check("username", "username should not be empty.").isString(),
         check("email", "Please enter valid email address.").isEmail(),
         check("password", "Weak password."),
-        check("confirm-password", "password did not match")
+        check("confirm_password", "password did not match")
     ], register
 );
 
 router.post(
     '/verify',
     [
-
+        check("token", "Token can't be empty"),
     ],
     verify
 );
@@ -86,21 +86,29 @@ router.post(
 router.post(
     '/verify1',
     [
+        check("token", "Token can't be empty.").exists(),
     ], verify1
 );
 
 router.post(
     '/create-course',
     [
-        check('title', "Title is required"),
-        check('author', "Author is required."),
-        check('description', "Description is required."),
-        check('price', "Price is required."),
-        check('for', "For is required."),
-        check('platform', "Platform is required."),
-        check('prerequisite', "Prerequisite is required."),
+        check("title", "Title is required").exists(),
+        check('description', "Description is required.").exists(),
+        check('price', "Price is required.").exists(),
+        check('suitableFor', "For is required.").exists(),
+        check('platform', "Platform is required.").exists(),
+        check('prerequisite', "Prerequisite is required.").exists(),
     ],
     createContent
 );
 
+router.post(
+    '/create-section',
+    [
+        check("number", "Number is required").exists(),
+        check("sectionName", "Section name can't be empty").exists(),
+    ],
+    createSection
+)
 module.exports = router

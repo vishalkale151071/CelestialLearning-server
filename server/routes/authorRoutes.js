@@ -3,7 +3,7 @@ const router = express.Router()
 const { check } = require("express-validator");
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 const { profile, update, emailChange, verify1, passwordChange } = require('../controller/authorProfile');
-const { createContent, createSection } = require('../controller/authorContentController');
+const { createContent, createSection, myCourses, courseSections, uploadVideo } = require('../controller/authorContentController');
 
 router.post(
     '/register',
@@ -108,7 +108,28 @@ router.post(
     [
         check("number", "Number is required").exists(),
         check("sectionName", "Section name can't be empty").exists(),
+        check('courseId', "CourseID is required.").exists()
     ],
     createSection
+);
+
+router.post('/courses', [], myCourses);
+
+router.post(
+    '/course/sections',
+    [
+        check('courseId', "CourseId is required.").exists()
+    ],
+    courseSections
 )
+
+router.post(
+    '/add-video',
+    [
+        check('sectionId', "SectionId is required.").exists(),
+        check('videoName', "Video is required.").exists()
+    ],
+    uploadVideo
+);
+
 module.exports = router

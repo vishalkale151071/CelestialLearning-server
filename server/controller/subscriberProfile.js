@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 require('dotenv').config();
 const sgMail = require('@sendgrid/mail')
+const aws = require('aws-sdk')
 
 exports.profile = asyncHandler(async (req, res) => {
 
@@ -26,11 +27,14 @@ exports.profile = asyncHandler(async (req, res) => {
         const _id = subscriber.profile_id;
         const profiledata = await SubscriberProfile.findOne({ _id: _id });
         if (profiledata) {
+            const url = `https://celestiallearning.s3.amazonaws.com/Subscriber_Profile_Images/${profiledata._id}.${profiledata.extension}`
             return res.json({
-                message: profiledata,
-            }
-            );
+                url, profiledata
+            })
+
         }
+
+
         else {
             return res.json({
                 message: "Profile not added.",
@@ -49,27 +53,66 @@ exports.profile = asyncHandler(async (req, res) => {
 exports.update = asyncHandler(async (req, res) => {
 
     const { firstName, middleName, lastName, phNum, linkedInURL, twitterURL, higherEducation, areaOfInterest } = req.body;
+    var flag = 0;
     const email = req.session.email;
-
     const subscriber = await Subscriber.findOne({ email });
     const _id = subscriber.profile_id;
     const profile = await SubscriberProfile.findOne({ _id });
     const filter = { _id: await profile._id }
+    var s3, params, fileExtension;
+    if (req.file) {
+        let myImage = req.file.originalname.split(".");
+        fileExtension = myImage[myImage.length - 1];
+        s3 = new aws.S3({
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            }
+        })
+        params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: `Subscriber_Profile_Images/${profile._id}.${fileExtension}`,
+            Body: req.file.buffer,
+            ACL: 'public-read'
+        }
+        flag = 1;
+    }
     if (profile) {
-        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, higherEducation: higherEducation, areaOfInterest: areaOfInterest }
+        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, higherEducation: higherEducation, areaOfInterest: areaOfInterest, extension: fileExtension }
         await SubscriberProfile.findOneAndUpdate(filter, update,
             {
                 useFindAndModify: false,
                 new: true
             },
         )
-        return res.json({
-            message: "profile updated successfully"
-        })
+
+        if (flag == 1) {
+            s3.upload(params, (error, data) => {
+                if (error) {
+                    res.status(500);
+                    return res.json({
+                        message: `Error while uploading`,
+                    })
+                }
+                else {
+                    res.status(200);
+                    return res.json({
+                        message: "profile updated successfully"
+                    })
+                }
+            })
+        }
+        else {
+            res.status(200);
+            return res.json({
+                message: "profile updated successfully"
+            })
+        }
+
     }
     else {
         return res.json({
-            message: "no such author exists.",
+            message: "no such subscriber exists.",
         })
     }
 

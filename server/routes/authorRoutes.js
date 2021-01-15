@@ -1,9 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const { check } = require("express-validator");
+const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 const { profile, update, emailChange, verify1, passwordChange } = require('../controller/authorProfile');
-const { createContent, createSection, myCourses, courseSections, uploadVideo } = require('../controller/authorContentController');
+const { createContent, createSection, myCourses, courseSections, uploadVideo, sectionVideos, showVideo } = require('../controller/authorContentController');
+
+const storage = multer.memoryStorage({
+    destination: function (req, file, callback) {
+        callback(null, '')
+    }
+})
+const upload = multer({ storage }).single('image');
 
 router.post(
     '/register',
@@ -62,7 +70,7 @@ router.post(
 );
 
 router.post(
-    '/update',
+    '/update', upload,
     [
 
     ], update
@@ -124,12 +132,26 @@ router.post(
 )
 
 router.post(
-    '/add-video',
+    '/add-video', upload,
     [
-        check('sectionId', "SectionId is required.").exists(),
-        check('videoName', "Video is required.").exists()
+        check("image", "video is required"),
+        check('sectionId', "SectionId is required."),
+        check('videoName', "Video is required."),
     ],
     uploadVideo
 );
 
+router.post(
+    '/course/sections/videos',
+    [
+        check("sectionId", "section iD is must").exists(),
+    ], sectionVideos
+)
+
+router.post(
+    '/showVideo',
+    [
+        check("videoId", "video id is required").exists(),
+    ], showVideo
+)
 module.exports = router

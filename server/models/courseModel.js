@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const slug = require('slug')
+
 const videoSchema = mongoose.Schema({
     name: {
         type: String,
@@ -12,9 +12,6 @@ const videoSchema = mongoose.Schema({
     versionKey: false,
 });
 
-videoSchema.pre('save', async function () {
-    this.videoSlug = slug(this.name);
-});
 
 const Video = new mongoose.model('Video', videoSchema)
 
@@ -39,12 +36,6 @@ const sectionSchema = mongoose.Schema({
     versionKey: false,
 });
 
-sectionSchema.pre('save', async function (next) {
-    this.sectionSlug = slug(this.sectionName);
-    //const content = new Content();
-    //content.save();
-    next();
-});
 
 const Section = new mongoose.model('Section', sectionSchema)
 
@@ -99,11 +90,6 @@ const courseSchema = mongoose.Schema(
     versionKey: false,
 }
 );
-
-courseSchema.pre('save', async function (next) {
-    this.courseSlug = slug(this.title);
-    next();
-});
 
 const Course = new mongoose.model('Course', courseSchema);
 

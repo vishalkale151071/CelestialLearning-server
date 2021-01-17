@@ -3,7 +3,6 @@ const { SubscriberProfile } = require("../models/subscriberModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
-const auth = require('../middleware/authMiddleware')
 const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
 const e = require("express")
@@ -220,7 +219,7 @@ exports.login = asyncHandler(async (req, res) => {
 
             return res.json({
                 message: " You are logged in successfully.",
-                _id: await user.id,
+                target: req.sessionID,
 
             })
         }
@@ -298,6 +297,7 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
             });
     }
 });
+
 exports.forgetpasswordverify = asyncHandler(async (req, res) => {
     const error = validationResult(req);
 

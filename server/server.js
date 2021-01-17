@@ -8,6 +8,7 @@ const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const subscriberRoutes = require('./routes/subscriberRoutes');
 const authorRoutes = require('./routes/authorRoutes');
+const pluginRoutes = require('./routes/pluginRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const mongoose = require('mongoose');
@@ -25,11 +26,15 @@ app.use(session({
     secret: "12345",
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ mongooseConnection: mongoose.connection })
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection,
+        clear_interval: 3600
+    })
 }))
 
 app.use('/subscriber', subscriberRoutes);
 app.use('/author', authorRoutes);
+app.use('/plugin', pluginRoutes);
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));

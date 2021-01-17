@@ -8,10 +8,11 @@ const { createContent, createSection, myCourses, courseSections, uploadVideo, se
 
 const storage = multer.memoryStorage({
     destination: function (req, file, callback) {
-        callback(null, '')
+        callback(null, '');
     }
 })
 const upload = multer({ storage }).single('image');
+const uploadMultiple = multer({ storage }).array('image', 2);
 
 router.post(
     '/register',
@@ -99,14 +100,14 @@ router.post(
 );
 
 router.post(
-    '/create-course',
+    '/create-course', uploadMultiple,
     [
-        check("title", "Title is required").exists(),
-        check('description', "Description is required.").exists(),
-        check('price', "Price is required.").exists(),
-        check('suitableFor', "For is required.").exists(),
-        check('platform', "Platform is required.").exists(),
-        check('prerequisite', "Prerequisite is required.").exists(),
+        check("title", "Title is required"),
+        check('description', "Description is required."),
+        check('price', "Price is required."),
+        check('suitableFor', "For is required."),
+        check('platform', "Platform is required."),
+        check('prerequisite', "Prerequisite is required."),
     ],
     createContent
 );
@@ -154,4 +155,6 @@ router.post(
         check("videoId", "video id is required").exists(),
     ], showVideo
 )
+
+
 module.exports = router

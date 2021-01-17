@@ -19,6 +19,16 @@ exports.createContent = asyncHandler(async (req, res) => {
         )
     }
     const { title, description, price, suitableFor, platform, prerequisite } = req.body;
+    var fileExtension;
+    var flag = 0
+    if (req.files) {
+        let myCourseThumbnail = req.files[0].originalname.split(".");
+        fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
+        let myCoursePreview = req.files[1].originalname.split(".");
+        fileExtensionPreview = myCoursePreview[myCoursePreview.length - 1];
+        flag = 1;
+    }
+
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const _id = author._id;
@@ -31,10 +41,13 @@ exports.createContent = asyncHandler(async (req, res) => {
         platform: platform,
         prerequisite: prerequisite,
         courseSlug: slug(title),
+        thumbnailExtension: fileExtensionThumbnail,
+        previewExtension: fileExtensionPreview,
     });
     try {
         await course.save();
         const s3 = new aws.S3();
+
 
         const params = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/`, ACL: 'public-read', Body: 'body does not matter' };
         s3.upload(params, (err, data) => {
@@ -42,7 +55,26 @@ exports.createContent = asyncHandler(async (req, res) => {
                 console.log(err)
             }
             else {
-                console.log(data)
+                if (flag == 1) {
+                    const param = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_thumbnail.${fileExtensionThumbnail}`, ACL: 'public-read', Body: req.files[0].buffer };
+                    s3.upload(param, (err, data) => {
+                        if (err) {
+                            console.log(err);
+                        }
+                        else {
+                            const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.files[1].buffer };
+                            s3.upload(previewParam, (err, data) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                                else {
+                                    console.log(data);
+                                }
+                            })
+                        }
+                    })
+
+                }
             }
         })
         res.status(200);
@@ -134,9 +166,15 @@ exports.myCourses = asyncHandler(async (req, res) => {
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const courses = await Course.find({ author: author._id });
+    const url = [];
+    for (i = 0; i < courses.length; i++) {
+        url.push(`https://celestiallearning.s3.amazonaws.com/${courses[i].courseSlug}/${courses[i]._id}_thumbnail.${courses[i].extension}`);
+    }
+
 
     res.status(200);
     return res.json({
+        url: url,
         data: courses
     })
 });

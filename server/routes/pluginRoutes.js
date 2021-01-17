@@ -6,7 +6,6 @@ const { check } = require('express-validator')
 router.post(
     '/init',
     [
-        check('user', "User is required.").exists()
     ],
     init
 )

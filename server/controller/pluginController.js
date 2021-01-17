@@ -10,31 +10,41 @@ exports.init = asyncHandler(async (req, res) => {
             message: errors.array()[0].msg
         });
     }
-
-    const { user } = req.body;
-
-    req.sessionStore.get(user, function (error, session) {
-        if (session) {
-            console.log("session Found.");
-            session.plugin = "start"
-            req.sessionStore.set(user, session, function (error) {
-                if (error) {
-                    console.log(error);
-                    res.status(400);
-                    return res.jsonp({
-                        message: false
-                    })
-                }
-            });
-            res.status(201);
-            return res.jsonp({
-                message: true
-            });
-        } else {
-            res.status(400);
-            return res.jsonp({
-                message: false
-            })
-        }
-    });
+    console.log(req.session)
+    if (req.session.email) {
+        req.session.plugin = "start"
+        res.status(200)
+        res.json({
+            message: "Ok"
+        });
+    } else {
+        res.status(400)
+        res.json({
+            message: "Bad"
+        });
+    }
+    // req.sessionStore.get(user, function (error, session) {
+    //     if (session) {
+    //         console.log("session Found.");
+    //         session.plugin = "start"
+    //         req.sessionStore.set(user, session, function (error) {
+    //             if (error) {
+    //                 console.log(error);
+    //                 res.status(400);
+    //                 return res.jsonp({
+    //                     message: false
+    //                 })
+    //             }
+    //         });
+    //         res.status(201);
+    //         return res.jsonp({
+    //             message: true
+    //         });
+    //     } else {
+    //         res.status(400);
+    //         return res.jsonp({
+    //             message: false
+    //         })
+    //     }
+    // });
 });

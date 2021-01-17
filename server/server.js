@@ -12,8 +12,10 @@ const pluginRoutes = require('./routes/pluginRoutes');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const mongoose = require('mongoose');
-connectDB();
 
+const { param } = require('./routes/authorRoutes');
+
+connectDB();
 
 const app = express();
 dotenv.config();
@@ -32,9 +34,12 @@ app.use(session({
     })
 }))
 
+
+
 app.use('/subscriber', subscriberRoutes);
 app.use('/author', authorRoutes);
 app.use('/plugin', pluginRoutes);
+
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
@@ -42,7 +47,7 @@ if (process.env.NODE_ENV === 'development') {
 
 app.use(notFound)
 app.use(errorHandler)
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
 });

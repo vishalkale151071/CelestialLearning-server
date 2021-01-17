@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken')
 const mongoose = require('mongoose')
 require('dotenv').config();
 const sgMail = require('@sendgrid/mail')
+const aws = require('aws-sdk')
 
 exports.profile = asyncHandler(async (req, res) => {
 
@@ -24,19 +25,22 @@ exports.profile = asyncHandler(async (req, res) => {
         const _id = (author.profile_id);
         const profiledata = await AuthorProfile.findOne({ _id: _id });
         if (profiledata) {
+            const url = `https://celestiallearning.s3.amazonaws.com/Author_Profile_Images/${profiledata._id}.${profiledata.extension}`
+            res.status(200);
             return res.json({
-
-                message: profiledata,
+                url, profiledata,
             }
             );
         }
         else {
+            res.status(200);
             return res.json({
                 message: "Profile not added.",
             })
         }
     }
     else {
+        res.status(200);
         return res.json({
             message: "Incorrect author details.",
         })
@@ -47,26 +51,66 @@ exports.profile = asyncHandler(async (req, res) => {
 
 exports.update = asyncHandler(async (req, res) => {
 
-    const { token, firstName, middleName, lastName, phNum, linkedInURL, twitterURL, qualification, biography } = req.body;
+    const { firstName, middleName, lastName, phNum, linkedInURL, twitterURL, qualification, biography } = req.body;
     const email = req.session.email;
-
+    var flag = 0;
     const author = await Author.findOne({ email });
     const _id = author.profile_id;
     const profile = await AuthorProfile.findOne({ _id });
     const filter = { _id: await profile._id }
+    var s3, params, fileExtension;
+    if (req.file) {
+        let myImage = req.file.originalname.split(".");
+        fileExtension = myImage[myImage.length - 1];
+        s3 = new aws.S3({
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            }
+        })
+        params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: `Author_Profile_Images/${profile._id}.${fileExtension}`,
+            Body: req.file.buffer,
+            ACL: 'public-read'
+        }
+        flag = 1;
+    }
     if (profile) {
-        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, qualification: qualification, biography: biography }
+        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, qualification: qualification, biography: biography, extension: fileExtension }
         await AuthorProfile.findOneAndUpdate(filter, update,
             {
                 useFindAndModify: false,
                 new: true
             },
         )
-        return res.json({
-            message: "author profile updated successfully"
-        })
+        if (flag == 1) {
+            s3.upload(params, (error, data) => {
+                if (error) {
+                    res.status(500);
+                    return res.json({
+                        message: `Error while uploading`,
+                    })
+                }
+                else {
+                    res.status(200);
+                    return res.json({
+                        message: "profile updated successfully"
+                    })
+                }
+            })
+        }
+        else {
+            res.status(200);
+            return res.json({
+                message: "profile updated successfully"
+            })
+        }
+
     }
+
     else {
+        res.status(200);
         return res.json({
             message: "no such author exists.",
         })
@@ -109,8 +153,9 @@ exports.emailChange = asyncHandler(async (req, res) => {
             sgMail
                 .send(emailData)
                 .then(sent => {
+                    res.status(200);
                     return res.json({
-                        message: `Email has been sent to ${new_email} ${token}`
+                        message: token
                     });
                 })
                 .catch(error => {
@@ -121,6 +166,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 });
         }
         else {
+            res.status(200);
             return res.json({
                 message: "email id already registered."
             })
@@ -128,6 +174,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
 
     }
     else {
+        res.status(200);
         return res.json({
             message: "incorrect password",
         })

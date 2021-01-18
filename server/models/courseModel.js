@@ -69,13 +69,18 @@ const courseSchema = mongoose.Schema(
         },
         price: {
             type: Number,
-            required: true
+            required: false,
+            default: 0
         },
         suitableFor: [{
             type: String
         }],
         platform: {
             type: String
+        },
+        category: {
+            type: String,
+            required: true
         },
         prerequisite: {
             type: String

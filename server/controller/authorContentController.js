@@ -18,7 +18,7 @@ exports.createContent = asyncHandler(async (req, res) => {
             }
         )
     }
-    const { title, description, price, suitableFor, platform, prerequisite } = req.body;
+    const { title, description, category, suitableFor, platform, prerequisite } = req.body;
     var fileExtension;
     var flag = 0
     if (req.files) {
@@ -36,7 +36,7 @@ exports.createContent = asyncHandler(async (req, res) => {
         author: _id,
         title: title,
         description: description,
-        price: price,
+        category: category,
         suitableFor: suitableFor,
         platform: platform,
         prerequisite: prerequisite,
@@ -45,7 +45,9 @@ exports.createContent = asyncHandler(async (req, res) => {
         previewExtension: fileExtensionPreview,
     });
     try {
-        await course.save();
+
+        const { _id } = await course.save();
+        console.log("Id : ", _id)
         const s3 = new aws.S3();
 
 
@@ -79,7 +81,8 @@ exports.createContent = asyncHandler(async (req, res) => {
         })
         res.status(200);
         return res.json({
-            message: "Course content data saved."
+            message: "Course content data saved.",
+            courseId: _id
         });
     }
     catch (err) {
@@ -111,7 +114,7 @@ exports.createSection = asyncHandler(async (req, res) => {
         sectionSlug: `${course.courseSlug}_${slug(sectionName)}`
     });
     try {
-        await section.save();
+        const { _id } = await section.save();
 
         const sectionID = section._id;
         const s3 = new aws.S3();
@@ -140,7 +143,8 @@ exports.createSection = asyncHandler(async (req, res) => {
 
         res.status(200);
         return res.json({
-            message: "Course section data saved."
+            message: "Course section data saved.",
+            sectionId: `${_id}`
         });
     }
     catch (err) {
@@ -220,14 +224,17 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
         });
     }
 
-    const { videoName, sectionId } = req.body;
+    const obj = JSON.parse(JSON.stringify(req.body));
+
+    const vedioName = obj.vedioName
+    const sectionId = obj.sectionId
     let myVideo = req.file.originalname.split(".");
     const fileExtension = myVideo[myVideo.length - 1];
 
     const section = await Section.findOne({ _id: sectionId });
     const video = new Video({
-        name: videoName,
-        videoSlug: `${section.sectionSlug}_${slug(videoName)}.${fileExtension}`
+        name: vedioName,
+        videoSlug: `${section.sectionSlug}_${slug(vedioName)}.${fileExtension}`
     })
     await video.save();
 

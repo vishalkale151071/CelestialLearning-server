@@ -218,6 +218,7 @@ exports.login = asyncHandler(async (req, res) => {
             })
         }
         else {
+            res.status(401)
             return res.json({
                 message: "Please activate your account.",
             })
@@ -225,7 +226,9 @@ exports.login = asyncHandler(async (req, res) => {
 
     }
     else {
+        res.status(401)
         return res.json({
+
             message: "Incorrect username or password.",
         })
     }

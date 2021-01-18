@@ -104,7 +104,7 @@ router.post(
     [
         check("title", "Title is required"),
         check('description', "Description is required."),
-        check('price', "Price is required."),
+        check('category', "Category is required."),
         check('suitableFor', "For is required."),
         check('platform', "Platform is required."),
         check('prerequisite', "Prerequisite is required."),

@@ -14,6 +14,7 @@ const MongoStore = require('connect-mongo')(session);
 const mongoose = require('mongoose');
 
 const { param } = require('./routes/authorRoutes');
+const { logout } = require('./controller/logout');
 
 connectDB();
 
@@ -39,7 +40,7 @@ app.use(session({
 app.use('/subscriber', subscriberRoutes);
 app.use('/author', authorRoutes);
 app.use('/plugin', pluginRoutes);
-
+app.post('/logout', logout);
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));

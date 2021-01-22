@@ -12,7 +12,6 @@ const videoSchema = mongoose.Schema({
     versionKey: false,
 });
 
-
 const Video = new mongoose.model('Video', videoSchema)
 
 const sectionSchema = mongoose.Schema({
@@ -35,7 +34,6 @@ const sectionSchema = mongoose.Schema({
 }, {
     versionKey: false,
 });
-
 
 const Section = new mongoose.model('Section', sectionSchema)
 
@@ -89,10 +87,12 @@ const courseSchema = mongoose.Schema(
             type: String
         },
         thumbnailExtension: {
-            type: String
+            type: String,
+            default: "NA"
         },
         previewExtension: {
-            type: String
+            type: String,
+            default : "NA"
         },
         content: {
             type: mongoose.Schema.Types.ObjectId,

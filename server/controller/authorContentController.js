@@ -5,7 +5,7 @@ const { Author } = require("../models/authorModel");
 const aws = require('aws-sdk')
 const slug = require('slug')
 
-
+//url : author/create-course
 exports.createContent = asyncHandler(async (req, res) => {
 
     const errors = validationResult(req);
@@ -19,16 +19,8 @@ exports.createContent = asyncHandler(async (req, res) => {
         )
     }
     const { title, description, category, suitableFor, platform, prerequisite } = req.body;
-    var fileExtension;
-    var flag = 0
-    if (req.files) {
-        let myCourseThumbnail = req.files[0].originalname.split(".");
-        fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
-        let myCoursePreview = req.files[1].originalname.split(".");
-        fileExtensionPreview = myCoursePreview[myCoursePreview.length - 1];
-        flag = 1;
-    }
-
+    
+    
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const _id = author._id;
@@ -41,44 +33,22 @@ exports.createContent = asyncHandler(async (req, res) => {
         platform: platform,
         prerequisite: prerequisite,
         courseSlug: slug(title),
-        thumbnailExtension: fileExtensionThumbnail,
-        previewExtension: fileExtensionPreview,
     });
     try {
 
         const { _id } = await course.save();
         console.log("Id : ", _id)
         const s3 = new aws.S3();
-
-
         const params = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/`, ACL: 'public-read', Body: 'body does not matter' };
         s3.upload(params, (err, data) => {
             if (err) {
                 console.log(err)
             }
             else {
-                if (flag == 1) {
-                    const param = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_thumbnail.${fileExtensionThumbnail}`, ACL: 'public-read', Body: req.files[0].buffer };
-                    s3.upload(param, (err, data) => {
-                        if (err) {
-                            console.log(err);
-                        }
-                        else {
-                            const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.files[1].buffer };
-                            s3.upload(previewParam, (err, data) => {
-                                if (err) {
-                                    console.log(err);
-                                }
-                                else {
-                                    console.log(data);
-                                }
-                            })
-                        }
-                    })
-
+                console.log(data);
                 }
-            }
-        })
+            })
+        
         res.status(200);
         return res.json({
             message: "Course content data saved.",
@@ -94,6 +64,7 @@ exports.createContent = asyncHandler(async (req, res) => {
     }
 });
 
+//url:  author/create-section
 exports.createSection = asyncHandler(async (req, res) => {
 
     const errors = validationResult(req);
@@ -157,6 +128,7 @@ exports.createSection = asyncHandler(async (req, res) => {
 
 });
 
+//url:  author/courses
 exports.myCourses = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -170,19 +142,25 @@ exports.myCourses = asyncHandler(async (req, res) => {
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const courses = await Course.find({ author: author._id });
-    const url = [];
+    const data = [];
     for (i = 0; i < courses.length; i++) {
-        url.push(`https://celestiallearning.s3.amazonaws.com/${courses[i].courseSlug}/${courses[i]._id}_thumbnail.${courses[i].extension}`);
+        data.push({
+            'thumbnail': `https://celestiallearning.s3.amazonaws.com/${courses[i].courseSlug}/${courses[i]._id}_thumbnail.${courses[i].thumbnailExtension}`,
+            'courseId': courses[i]._id,
+            'courseName': courses[i].title,
+            'category': courses[i].category,
+            'price': courses[i].price
+        });
     }
-
 
     res.status(200);
     return res.json({
-        url: url,
-        data: courses
+        // url: url,
+        data
     })
 });
 
+//url:  author/course/sections
 exports.courseSections = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -204,15 +182,56 @@ exports.courseSections = asyncHandler(async (req, res) => {
     const sectionData = []
 
     for (i = 0; i < sections.length; i++) {
+
         const sdata = await Section.findOne({ _id: sections[i] });
-        sectionData.push(sdata);
+
+        const videos = sdata.video;
+
+
+        if (videos.length == 0) {
+            sectionData.push({
+                "sectionId": sdata._id,
+                "number": sdata.number,
+                "sectionName": sdata.sectionName,
+                "videoId": "NIL",
+                "videoName": "NIL"
+            })
+        }
+        else {
+            const videoData = []
+            for (j = 0; j < videos.length; j++) {
+
+                const vdata = await Video.findOne({ _id: videos[j] });
+
+                var path = vdata.videoSlug;
+                path = path.split("_");
+                const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`;
+                console.log(url)
+                videoData.push({
+                    "videoId": vdata._id,
+                    "videoName": vdata.name,
+                    "videoURL": url,
+                })
+
+            }
+            sectionData.push({
+                "sectionId": sdata._id,
+                "number": sdata.number,
+                "sectionName": sdata.sectionName,
+                "video": videoData,
+            })
+            console.log(sectionData);
+        }
     }
+
     res.status(200);
     return res.json({
-        sections: sectionData
+        sections: sectionData,
+
     });
 });
 
+//url:  author/add-video
 exports.uploadVideo = asyncHandler(async (req, res) => {
 
     const errors = validationResult(req);
@@ -224,10 +243,11 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
         });
     }
 
-    const obj = JSON.parse(JSON.stringify(req.body));
+    //const obj = JSON.parse(JSON.stringify(req.body));
 
-    const vedioName = obj.vedioName
-    const sectionId = obj.sectionId
+    //const vedioName = obj.vedioName
+    //const sectionId = obj.sectionId
+    const { vedioName, sectionId } = req.body;
     let myVideo = req.file.originalname.split(".");
     const fileExtension = myVideo[myVideo.length - 1];
 
@@ -273,29 +293,59 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     })
 });
 
-exports.sectionVideos = asyncHandler(async (req, res) => {
-    const errors = validationResult(req);
+//url:  author/uploadThumbnailPreview
+exports.thumbnailPreview = asyncHandler(async (req, res) => {
+   
+    const obj = JSON.parse(JSON.stringify(req.body));
 
-    if (!errors.isEmpty()) {
-        res.status(400);
-        return res.json({
-            message: errors.array()[0].msg
-        });
-    }
-    const { sectionId } = req.body;
-    const section = await Section.findOne({ _id: sectionId });
-    const videos = section.video;
-    const videoData = []
-    for (i = 0; i < videos.length; i++) {
-        const vData = await Video.findOne({ _id: videos[i] })
-        videoData.push(vData);
-    }
-    res.status(200);
-    return res.json({
-        videoData,
-    })
+    const courseId = obj.courseId;
+    
+    if (req.files) 
+    {
+        let myCourseThumbnail = req.files[0].originalname.split(".");
+        fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
+        let myCoursePreview = req.files[1].originalname.split(".");
+        fileExtensionPreview = myCoursePreview[myCoursePreview.length - 1];
+        const course = await Course.findOne({_id:courseId});
+        const s3 = new aws.S3();
+        await Course.updateMany({_id:courseId},{thumbnailExtension: fileExtensionThumbnail,
+            previewExtension: fileExtensionPreview}),
+            (err) => {
+                    res.status(401);
+                    return res.json({err});
+                }
+                res.status(200);
+                    return res.json({
+                        message: "thumbnail changed",
+                    })
+                
+            };
+
+            const param = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_thumbnail.${fileExtensionThumbnail}`, ACL: 'public-read', Body: req.files[0].buffer };
+            s3.upload(param, (err, data) => {
+                if (err) {
+                    res.status(401);
+                    return res.json({err});
+                }
+                else {
+                    const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.files[1].buffer };
+                    s3.upload(previewParam, (err, data) => {
+                        if (err) {
+                            res.status(401);
+                            return res.json({err});
+                        }
+                        else {
+                            res.status(200);
+                            return res.json({
+                                message: "Thumbnail and preview uploaded.",
+                            })
+                        }
+                    })
+                }
+            })  
 })
 
+//url:  author/showVideo
 exports.showVideo = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
@@ -309,30 +359,88 @@ exports.showVideo = asyncHandler(async (req, res) => {
     const video = await Video.findOne({ _id: videoId });
     var path = video.videoSlug;
     path = path.split("_");
-    const s3Client = new aws.S3({
-        accessKeyId: process.env.AWS_ACCESS_KEY,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    });
 
-    const downloadParams = {
-        Bucket: process.env.BUCKET_NAME,
-        Key: `${path[0]}/${path[1]}/${path[2]}`,
-    };
-
-    s3Client.getObject(downloadParams, function (err, data) {
-        if (err) {
-            res.status(400);
-            return res.json({
-                message: `error => ${err}`
-            })
-        }
-        else {
-            res.status(200);
-            return res.json({
-                message: `succsessful =>${data}`,
-            })
-        }
+    res.json({
+        message: `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`,
     })
-
 })
 
+/*exports.trial = asyncHandler(async (req, res) => {
+
+    // const s3Client = new aws.S3({
+    //     accessKeyId: process.env.AWS_ACCESS_KEY,
+    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    // });
+
+    // const downloadParams = {
+    //     Bucket: process.env.BUCKET_NAME,
+    //     Key: `${path[0]}/${path[1]}/${path[2]}`,
+    // };
+
+    // s3Client.getObject(downloadParams, function (err, data) {
+    //     if (err) {
+    //         res.status(400);
+    //         return res.json({
+    //             message: `error => ${err}`
+    //         })
+    //     }
+    //     else {
+    //         res.status(200);
+    //         return res.json({
+    //             //message: `succsessful =>${data}`,
+    //             message: `https://celestiallearning.s3.amazonaws.com/blockchain/etherum/metamask.mp4`,
+    //         })
+    //     }
+    // })
+
+
+    //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+    //const ffmpeg = require('fluent-ffmpeg');
+    //ffmpeg.setFfmpegPath(ffmpegPath);
+    // open input stream
+    var infs = new ffmpeg
+
+    infs.addInput('https://celestiallearning.s3.amazonaws.com/6003f5ed51c397175752b206_preview.mp4').outputOptions([
+        '-map 0:0',
+        '-map 0:1',
+        '-map 0:0',
+        '-map 0:1',
+        '-s:v:0 2160x3840',
+        '-c:v:0 libx264',
+        '-b:v:0 2000k',
+        '-s:v:1 960x540',
+        '-c:v:1 libx264',
+        '-b:v:1 365k',
+        // '-var_stream_map', '"v:0,a:0 v:1,a:1"',
+        '-master_pl_name master.m3u8',
+        '-f hls',
+        '-max_muxing_queue_size 1024',
+        '-hls_time 1',
+        '-hls_list_size 0',
+        '-hls_segment_filename', 'v%v/fileSequence%d.ts'
+    ]).output('./video.m3u8')
+        .on('start', function (commandLine) {
+            console.log('Spawned Ffmpeg with command: ' + commandLine);
+        })
+        .on('error', function (err, stdout, stderr) {
+            console.log('An error occurred: ' + err.message, err, stderr);
+        })
+        .on('progress', function (progress) {
+            console.log('Processing: ' + progress.percent + '% done')
+        })
+        .on('end', function (err, stdout, stderr) {
+            console.log('Finished processing!')
+
+        })
+        .run()
+    const s3 = new aws.S3();
+    const params = { Bucket: process.env.BUCKET_NAME, Key: `react-native/expo-setup/v0/`, ACL: 'public-read', Body: '/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/v0' };
+    s3.upload(params, (err, data) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            console.log("uppdate");
+        }
+    })
+})*/

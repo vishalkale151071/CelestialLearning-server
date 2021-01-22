@@ -11,6 +11,7 @@ const { token } = require("morgan")
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 
+//url: subscriber/register
 exports.register = asyncHandler(async (req, res) => {
 
     const errors = validationResult(req);
@@ -114,6 +115,7 @@ exports.register = asyncHandler(async (req, res) => {
         });
 })
 
+//url: subscriber/verify
 exports.verify = asyncHandler(async (req, res) => {
 
     const error = validationResult(req)
@@ -183,6 +185,7 @@ exports.verify = asyncHandler(async (req, res) => {
     })
 });
 
+//url: subscriber/login
 exports.login = asyncHandler(async (req, res) => {
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -238,6 +241,7 @@ exports.login = asyncHandler(async (req, res) => {
     }
 });
 
+//url: subscriber/forgetpassword
 exports.forgetpassword = asyncHandler(async (req, res) => {
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -298,6 +302,8 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
             });
     }
 });
+
+//url: subscriber/forgetpasswordverify
 exports.forgetpasswordverify = asyncHandler(async (req, res) => {
     const error = validationResult(req);
 
@@ -328,6 +334,7 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
     })
 })
 
+//url: subscriber/updatepassword
 exports.updatepassword = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 

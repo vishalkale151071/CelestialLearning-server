@@ -3,8 +3,8 @@ const router = express.Router()
 const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
-const { profile, update, emailChange, verify1, passwordChange } = require('../controller/authorProfile');
-const { createContent, createSection, myCourses, courseSections, uploadVideo, sectionVideos, showVideo } = require('../controller/authorContentController');
+const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/authorProfile');
+const { createContent, createSection, myCourses, courseSections, uploadVideo, thumbnailPreview, showVideo } = require('../controller/authorContentController');
 
 const storage = multer.memoryStorage({
     destination: function (req, file, callback) {
@@ -65,16 +65,12 @@ router.post(
 
 router.post(
     '/profile',
-    [
-
-    ], profile
+    [], profile
 );
 
 router.post(
-    '/update', upload,
-    [
-
-    ], update
+    '/update',
+    [], update
 );
 
 router.post(
@@ -143,10 +139,10 @@ router.post(
 );
 
 router.post(
-    '/course/sections/videos',
+    '/uploadThumbnailPreview', uploadMultiple,
     [
-        check("sectionId", "section iD is must").exists(),
-    ], sectionVideos
+        check("courseId", "section iD is must").exists(),
+    ], thumbnailPreview
 )
 
 router.post(
@@ -156,5 +152,12 @@ router.post(
     ], showVideo
 )
 
+router.post(
+    '/profileImageUpdate', upload,
+    [], profileImageUpdate
+)
 
+router.post(
+    '/profileImageView', [], profileImageView
+)
 module.exports = router

@@ -8,6 +8,7 @@ require('dotenv').config();
 const sgMail = require('@sendgrid/mail')
 const aws = require('aws-sdk')
 
+//url: author/profile
 exports.profile = asyncHandler(async (req, res) => {
 
     const errors = validationResult(req);
@@ -25,10 +26,10 @@ exports.profile = asyncHandler(async (req, res) => {
         const _id = (author.profile_id);
         const profiledata = await AuthorProfile.findOne({ _id: _id });
         if (profiledata) {
-            const url = `https://celestiallearning.s3.amazonaws.com/Author_Profile_Images/${profiledata._id}.${profiledata.extension}`
+
             res.status(200);
             return res.json({
-                url, profiledata,
+                profiledata,
             }
             );
         }
@@ -48,64 +49,64 @@ exports.profile = asyncHandler(async (req, res) => {
 
 })
 
+//url: author/profileImageView
+exports.profileImageView = asyncHandler(async (req, res) => {
 
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(401);
+        return res.json({
+            message: errors.array()[0].msg,
+        })
+    }
+
+    const email = req.session.email;
+    const author = await Author.findOne({ email });
+    if (author) {
+        const _id = (author._id);
+        const profile = await AuthorProfile.findOne({ _id: author.profile_id });
+        if (profile) {
+            url = `https://celestiallearning.s3.amazonaws.com/Author_Profile_Images/${_id}.${profile.extension}`
+            res.status(200);
+            return res.json({
+
+                url
+            })
+        }
+        else {
+            res.status(200);
+            return res.json({
+                message: "No such profile available"
+            })
+        }
+
+
+    }
+});
+//url: author/update
 exports.update = asyncHandler(async (req, res) => {
 
     const { firstName, middleName, lastName, phNum, linkedInURL, twitterURL, qualification, biography } = req.body;
     const email = req.session.email;
-    var flag = 0;
+
     const author = await Author.findOne({ email });
     const _id = author.profile_id;
     const profile = await AuthorProfile.findOne({ _id });
     const filter = { _id: await profile._id }
-    var s3, params, fileExtension;
-    if (req.file) {
-        let myImage = req.file.originalname.split(".");
-        fileExtension = myImage[myImage.length - 1];
-        s3 = new aws.S3({
-            credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-            }
-        })
-        params = {
-            Bucket: process.env.BUCKET_NAME,
-            Key: `Author_Profile_Images/${profile._id}.${fileExtension}`,
-            Body: req.file.buffer,
-            ACL: 'public-read'
-        }
-        flag = 1;
-    }
+
     if (profile) {
         const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, qualification: qualification, biography: biography, extension: fileExtension }
         await AuthorProfile.findOneAndUpdate(filter, update,
             {
                 useFindAndModify: false,
                 new: true
-            },
+            }
         )
-        if (flag == 1) {
-            s3.upload(params, (error, data) => {
-                if (error) {
-                    res.status(500);
-                    return res.json({
-                        message: `Error while uploading`,
-                    })
-                }
-                else {
-                    res.status(200);
-                    return res.json({
-                        message: "profile updated successfully"
-                    })
-                }
-            })
-        }
-        else {
-            res.status(200);
-            return res.json({
-                message: "profile updated successfully"
-            })
-        }
+        res.status(200);
+        return res.json({
+            message: "profile updated successfully"
+        })
 
     }
 
@@ -117,6 +118,51 @@ exports.update = asyncHandler(async (req, res) => {
     }
 });
 
+//url : author/profileImageUpdate
+exports.profileImageUpdate = asyncHandler(async (req, res) => {
+
+    var flag = 0;
+    const email = req.session.email;
+    const author = await Author.findOne({ email });
+    const _id = author._id;
+
+    if (req.file) {
+        let myImage = req.file.originalname.split(".");
+        fileExtension = myImage[myImage.length - 1];
+        await AuthorProfile.updateOne({ _id: author.profile_id }, { extension: fileExtension });
+        s3 = new aws.S3({
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+            }
+        })
+        params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: `Author_Profile_Images/${_id}.${fileExtension}`,
+            Body: req.file.buffer,
+            ACL: 'public-read'
+        }
+        flag = 1;
+    }
+    if (flag == 1) {
+        s3.upload(params, (error, data) => {
+            if (error) {
+                res.status(500);
+                return res.json({
+                    message: `Error while uploading`,
+                })
+            }
+            else {
+                res.status(200);
+                return res.json({
+                    message: "profile image updated successfully"
+                })
+            }
+        })
+    }
+})
+
+//url: author/emailchange
 exports.emailChange = asyncHandler(async (req, res) => {
 
     const { new_email, password } = req.body;
@@ -182,6 +228,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
 
 })
 
+//url: author/verify1
 exports.verify1 = asyncHandler(async (req, res) => {
     const error = validationResult(req);
 
@@ -233,7 +280,7 @@ exports.verify1 = asyncHandler(async (req, res) => {
     })
 });
 
-
+//url: author/passwordchange
 exports.passwordChange = asyncHandler(async (req, res) => {
 
     const { old_password, new_password } = req.body;

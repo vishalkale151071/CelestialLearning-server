@@ -4,6 +4,7 @@ const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
 const { profile, update, emailChange, verify1, passwordChange } = require('../controller/subscriberProfile');
+const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
 
 const storage = multer.memoryStorage({
     destination: function (req, file, callback) {
@@ -37,7 +38,7 @@ router.post(
 );
 
 router.post(
-    '/forgetpassword',
+    '/forgetpassword', isLoggedIn,
     [
         check("email", "Email should not be empty.").isEmail(),
     ], forgetpassword
@@ -51,7 +52,7 @@ router.post(
     forgetpasswordverify
 );
 router.post(
-    '/updatepassword',
+    '/updatepassword', isLoggedIn,
     [
         check("new_password", "Password is weak."),
         check("confirm_password", "Passwords do not match."),
@@ -59,19 +60,19 @@ router.post(
 );
 
 router.post(
-    '/profile',
+    '/profile', isLoggedIn,
     [
     ], profile
 );
 
 router.post(
-    '/update', upload,
+    '/update', isLoggedIn, upload,
     [
     ], update
 );
 
 router.post(
-    '/emailchange',
+    '/emailchange', isLoggedIn,
     [
         check("new_email", "Email should be valid.").isEmail(),
     ], emailChange

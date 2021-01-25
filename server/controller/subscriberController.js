@@ -3,11 +3,11 @@ const { SubscriberProfile } = require("../models/subscriberModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
-const auth = require('../middleware/authMiddleware')
 const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
 const e = require("express")
 const { token } = require("morgan")
+const cookie = require('cookie-signature')
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 
@@ -220,11 +220,10 @@ exports.login = asyncHandler(async (req, res) => {
             )
             req.session.email = email;
             req.session.token = token;
-
+            const ck = cookie.sign(req.sessionID, '12345');
             return res.json({
                 message: " You are logged in successfully.",
-                _id: await user.id,
-
+                target: ck,
             })
         }
         else {

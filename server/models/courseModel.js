@@ -12,7 +12,6 @@ const videoSchema = mongoose.Schema({
     versionKey: false,
 });
 
-
 const Video = new mongoose.model('Video', videoSchema)
 
 const sectionSchema = mongoose.Schema({
@@ -35,7 +34,6 @@ const sectionSchema = mongoose.Schema({
 }, {
     versionKey: false,
 });
-
 
 const Section = new mongoose.model('Section', sectionSchema)
 
@@ -60,7 +58,8 @@ const courseSchema = mongoose.Schema(
         },
         title: {
             type: String,
-            required: true
+            required: true,
+            unique: true,
         },
         description: {
             type: String,
@@ -68,7 +67,8 @@ const courseSchema = mongoose.Schema(
         },
         price: {
             type: Number,
-            required: true
+            required: false,
+            default: 0
         },
         suitableFor: [{
             type: String
@@ -76,11 +76,23 @@ const courseSchema = mongoose.Schema(
         platform: {
             type: String
         },
+        category: {
+            type: String,
+            required: true
+        },
         prerequisite: {
             type: String
         },
         courseSlug: {
             type: String
+        },
+        thumbnailExtension: {
+            type: String,
+            default: "NA"
+        },
+        previewExtension: {
+            type: String,
+            default : "NA"
         },
         content: {
             type: mongoose.Schema.Types.ObjectId,

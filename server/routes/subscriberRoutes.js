@@ -3,8 +3,9 @@ const router = express.Router()
 const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
-const { profile, update, emailChange, verify1, passwordChange } = require('../controller/subscriberProfile');
+const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/subscriberProfile');
 const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
+
 
 const storage = multer.memoryStorage({
     destination: function (req, file, callback) {
@@ -70,6 +71,15 @@ router.post(
     [
     ], update
 );
+
+router.post(
+    '/profileImageUpdate', upload,
+    [], profileImageUpdate
+)
+
+router.post(
+    '/profileImageView', [], profileImageView
+)
 
 router.post(
     '/emailchange', isLoggedIn,

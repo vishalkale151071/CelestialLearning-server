@@ -4,7 +4,9 @@ const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/authorProfile');
-const { createContent, createSection, myCourses, courseSections, uploadVideo, thumbnailPreview, showVideo } = require('../controller/authorContentController');
+const { createContent, createSection, myCourses, courseSections, uploadVideo, showVideo, thumbnailUpload, previewUpload } = require('../controller/authorContentController');
+const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 const storage = multer.memoryStorage({
     destination: function (req, file, callback) {
@@ -25,7 +27,7 @@ router.post(
 );
 
 router.post(
-    '/verify',
+    '/verify', protect,
     [
         check("token", "Token can't be empty"),
     ],
@@ -33,7 +35,7 @@ router.post(
 );
 
 router.post(
-    '/forgetpasswordverify',
+    '/forgetpasswordverify', protect,
     [
         check("token", "Token is not present.")
     ],
@@ -55,7 +57,7 @@ router.post(
 );
 
 router.post(
-    '/updatepassword',
+    '/updatepassword', isLoggedIn,
     [
         check("new_password", "Password is weak."),
         check("confirm_password", "Passwords do not match."),
@@ -64,17 +66,17 @@ router.post(
 );
 
 router.post(
-    '/profile',
+    '/profile', isLoggedIn,
     [], profile
 );
 
 router.post(
-    '/update',
+    '/update', isLoggedIn,
     [], update
 );
 
 router.post(
-    '/passwordchange',
+    '/passwordchange', isLoggedIn,
     [
         check("old_password", "Password should not be empty"),
         check("new_password", "Password should not be empty "),
@@ -82,21 +84,21 @@ router.post(
 );
 
 router.post(
-    '/emailchange',
+    '/emailchange', isLoggedIn,
     [
         check("new_email", "Email should be valid.").isEmail(),
     ], emailChange
 );
 
 router.post(
-    '/verify1',
+    '/verify1', protect,
     [
         check("token", "Token can't be empty.").exists(),
     ], verify1
 );
 
 router.post(
-    '/create-course', uploadMultiple,
+    '/create-course', isLoggedIn, uploadMultiple,
     [
         check("title", "Title is required"),
         check('description', "Description is required."),
@@ -109,7 +111,7 @@ router.post(
 );
 
 router.post(
-    '/create-section',
+    '/create-section', isLoggedIn,
     [
         check("number", "Number is required").exists(),
         check("sectionName", "Section name can't be empty").exists(),
@@ -118,10 +120,10 @@ router.post(
     createSection
 );
 
-router.post('/courses', [], myCourses);
+router.post('/courses', isLoggedIn, [], myCourses);
 
 router.post(
-    '/course/sections',
+    '/course/sections', isLoggedIn,
     [
         check('courseId', "CourseId is required.").exists()
     ],
@@ -129,7 +131,7 @@ router.post(
 )
 
 router.post(
-    '/add-video', upload,
+    '/add-video', isLoggedIn, upload,
     [
         check("image", "video is required"),
         check('sectionId', "SectionId is required."),
@@ -139,25 +141,31 @@ router.post(
 );
 
 router.post(
-    '/uploadThumbnailPreview', uploadMultiple,
+    '/uploadThumbnail', isLoggedIn, upload,
     [
-        check("courseId", "section iD is must").exists(),
-    ], thumbnailPreview
+        check("courseId", "course iD is must").exists(),
+    ], thumbnailUpload
 )
 
 router.post(
-    '/showVideo',
+    '/uploadPreview', isLoggedIn, upload,
+    [
+        check("courseId", "course iD is must").exists(),
+    ], previewUpload
+)
+router.post(
+    '/showVideo', isLoggedIn,
     [
         check("videoId", "video id is required").exists(),
     ], showVideo
 )
 
 router.post(
-    '/profileImageUpdate', upload,
+    '/profileImageUpdate', isLoggedIn, upload,
     [], profileImageUpdate
 )
 
 router.post(
-    '/profileImageView', [], profileImageView
+    '/profileImageView', isLoggedIn, [], profileImageView
 )
 module.exports = router

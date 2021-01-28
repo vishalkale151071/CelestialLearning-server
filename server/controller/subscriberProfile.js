@@ -238,45 +238,34 @@ exports.verify1 = asyncHandler(async (req, res) => {
         })
     }
 
-    const token = req.headers.authorization.split(' ')[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
-        }
-        else {
-            const { new_email } = jwt.decode(token);
+    const { new_email } = jwt.decode(req.token);
 
-            const email = req.session.email;
+    const email = req.session.email;
 
-            const subscriber = await Subscriber.findOne({ email });
-            if (subscriber) {
+    const subscriber = await Subscriber.findOne({ email });
+    if (subscriber) {
 
 
-                const filter = { _id: subscriber._id }
-                const update = { email: new_email }
+        const filter = { _id: subscriber._id }
+        const update = { email: new_email }
 
-                await Subscriber.findOneAndUpdate(filter, update,
-                    {
-                        useFindAndModify: false,
-                        new: true
-                    },
-                )
-                req.session.email = new_email;
-                return res.json({
-                    message: "your email has been updated."
-                })
-            }
-            else {
-                return res.json({
-                    message: "no such user.",
-                })
-            }
-        }
-    })
+        await Subscriber.findOneAndUpdate(filter, update,
+            {
+                useFindAndModify: false,
+                new: true
+            },
+        )
+        req.session.email = new_email;
+        return res.json({
+            message: "your email has been updated."
+        })
+    }
+    else {
+        return res.json({
+            message: "no such user.",
+        })
+    }
 });
 
 //url:  subscriber/passwordChange

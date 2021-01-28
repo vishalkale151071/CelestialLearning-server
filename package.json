@@ -1,7 +1,7 @@
 {
   "name": "celestiallearning",
   "version": "1.0.0",
-  "description": "",
+  "description": "Celestial Learning Node server.",
   "main": "index.js",
   "scripts": {
     "start": "nodemon server/server.js",
@@ -40,6 +40,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vishalkale151071/CelestialLearning-server.git"
-  }
+    "url": "git+https://github.com/vishalkale151071/CelestialLearning-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vishalkale151071/CelestialLearning-server/issues"
+  },
+  "homepage": "https://github.com/vishalkale151071/CelestialLearning-server#readme"
 }

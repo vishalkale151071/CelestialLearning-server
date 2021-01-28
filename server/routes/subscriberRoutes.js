@@ -4,7 +4,9 @@ const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
 const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/subscriberProfile');
+const { courseHome } = require('../controller/subscriberContentController');
 const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 
 const storage = multer.memoryStorage({
@@ -25,7 +27,7 @@ router.post(
 );
 
 router.post(
-    '/verify',
+    '/verify', protect,
     [
     ], verify
 );
@@ -39,14 +41,14 @@ router.post(
 );
 
 router.post(
-    '/forgetpassword', isLoggedIn,
+    '/forgetpassword',
     [
         check("email", "Email should not be empty.").isEmail(),
     ], forgetpassword
 );
 
 router.post(
-    '/forgetpasswordverify',
+    '/forgetpasswordverify', protect,
     [
         check("token", "Token is not present.")
     ],
@@ -73,12 +75,12 @@ router.post(
 );
 
 router.post(
-    '/profileImageUpdate', upload,
+    '/profileImageUpdate', isLoggedIn, upload,
     [], profileImageUpdate
 )
 
 router.post(
-    '/profileImageView', [], profileImageView
+    '/profileImageView', isLoggedIn, [], profileImageView
 )
 
 router.post(
@@ -89,17 +91,23 @@ router.post(
 );
 
 router.post(
-    '/verify1',
+    '/verify1', protect,
     [
     ], verify1
 );
 
 router.post(
-    '/passwordchange',
+    '/passwordchange', isLoggedIn,
     [
         check("old_password", "Password should not be empty"),
         check("new_password", "Passwrod should not be empty "),
     ], passwordChange
 );
 
+router.post(
+    '/courseHome',
+    [
+        check("courseId", "course ID is required.")
+    ], courseHome
+)
 module.exports = router

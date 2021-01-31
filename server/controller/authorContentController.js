@@ -353,7 +353,7 @@ exports.previewUpload = asyncHandler(async (req, res) => {
             }
 
 
-        const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview1.${fileExtensionPreview}`, ACL: 'public-read', Body: req.file.buffer };
+        const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.file.buffer };
         s3.upload(previewParam, (err, data) => {
             if (err) {
                 res.status(401);
@@ -468,4 +468,70 @@ exports.showVideo = asyncHandler(async (req, res) => {
             console.log("uppdate");
         }
     })
+    <Panel header= {sectionData.sectionName} key={sectionData.sectionNumber}>
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel> 
+                    <Panel header="Section 2" key="2">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 3" key="3">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 4" key="4">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 5" key="5">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 6" key="6">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
 })*/

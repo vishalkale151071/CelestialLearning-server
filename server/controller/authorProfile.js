@@ -96,7 +96,7 @@ exports.update = asyncHandler(async (req, res) => {
     const filter = { _id: await profile._id }
 
     if (profile) {
-        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, qualification: qualification, biography: biography, extension: fileExtension }
+        const update = { firstName: firstName, middleName: middleName, lastName: lastName, phNum: phNum, linkedInURL: linkedInURL, twitterURL: twitterURL, qualification: qualification, biography: biography}
         await AuthorProfile.findOneAndUpdate(filter, update,
             {
                 useFindAndModify: false,

@@ -15,7 +15,7 @@ const mongoose = require('mongoose');
 
 const { param } = require('./routes/authorRoutes');
 const { logout } = require('./controller/logout');
-
+const { homePage } = require('./controller/homeController');
 connectDB();
 
 const app = express();
@@ -41,6 +41,7 @@ app.use('/subscriber', subscriberRoutes);
 app.use('/author', authorRoutes);
 app.use('/plugin', pluginRoutes);
 app.post('/logout', logout);
+app.get('/homePage',homePage);
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));

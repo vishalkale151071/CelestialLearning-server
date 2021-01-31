@@ -14,8 +14,9 @@ exports.courseHome = asyncHandler(async (req, res) => {
             message: errors.array()[0].msg
         });
     }
-    const { courseId } = req.body;
-    const course = await Course.findOne({ _id: courseId });
+    const { courseTitle } = req.body;
+    
+    const course = await Course.findOne({ title: courseTitle });
     const content = await Content.findOne({ _id: course.content });
     const sectionsId = content.section;
     const sectionData = [];

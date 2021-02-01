@@ -11,7 +11,7 @@ exports.homePage = asyncHandler(async(req,res)=>{
     for(i=0;i<course.length;i++)
     {
         const author = await Author.findOne({_id:course[i].author});
-        console.log(author)
+        
         const profile = await AuthorProfile.findOne({_id:author.profile_id});
         courseData.push({
             "courseName" : course[i].title,

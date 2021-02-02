@@ -80,9 +80,9 @@ const courseSchema = mongoose.Schema(
             type: String,
             required: true
         },
-        prerequisite: {
+        prerequisite: [{
             type: String
-        },
+        }],
         courseSlug: {
             type: String
         },

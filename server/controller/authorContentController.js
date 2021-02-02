@@ -19,8 +19,8 @@ exports.createContent = asyncHandler(async (req, res) => {
         )
     }
     const { title, description, category, suitableFor, platform, prerequisite } = req.body;
-    
-    
+
+
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const _id = author._id;
@@ -46,9 +46,9 @@ exports.createContent = asyncHandler(async (req, res) => {
             }
             else {
                 console.log(data);
-                }
-            })
-        
+            }
+        })
+
         res.status(200);
         return res.json({
             message: "Course content data saved.",
@@ -293,56 +293,80 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     })
 });
 
-//url:  author/uploadThumbnailPreview
-exports.thumbnailPreview = asyncHandler(async (req, res) => {
-   
+//url:  author/uploadThumbnail
+exports.thumbnailUpload = asyncHandler(async (req, res) => {
+
     const obj = JSON.parse(JSON.stringify(req.body));
 
     const courseId = obj.courseId;
-    
-    if (req.files) 
-    {
-        let myCourseThumbnail = req.files[0].originalname.split(".");
-        fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
-        let myCoursePreview = req.files[1].originalname.split(".");
-        fileExtensionPreview = myCoursePreview[myCoursePreview.length - 1];
-        const course = await Course.findOne({_id:courseId});
-        const s3 = new aws.S3();
-        await Course.updateMany({_id:courseId},{thumbnailExtension: fileExtensionThumbnail,
-            previewExtension: fileExtensionPreview}),
-            (err) => {
-                    res.status(401);
-                    return res.json({err});
-                }
-                res.status(200);
-                    return res.json({
-                        message: "thumbnail changed",
-                    })
-                
-            };
 
-            const param = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_thumbnail.${fileExtensionThumbnail}`, ACL: 'public-read', Body: req.files[0].buffer };
-            s3.upload(param, (err, data) => {
-                if (err) {
-                    res.status(401);
-                    return res.json({err});
-                }
-                else {
-                    const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.files[1].buffer };
-                    s3.upload(previewParam, (err, data) => {
-                        if (err) {
-                            res.status(401);
-                            return res.json({err});
-                        }
-                        else {
-                            res.status(200);
-                            return res.json({
-                                message: "Thumbnail and preview uploaded.",
-                            })
-                        }
-                    })
-                }
-            })  
+    if (req.file) {
+        let myCourseThumbnail = req.file.originalname.split(".");
+        fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
+        const course = await Course.findOne({ _id: courseId });
+        const s3 = new aws.S3();
+        await Course.updateOne({ _id: courseId }, {
+            thumbnailExtension: fileExtensionThumbnail,
+
+        }),
+            (err) => {
+                res.status(401);
+                return res.json({ err });
+            }
+
+        const param = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_thumbnail.${fileExtensionThumbnail}`, ACL: 'public-read', Body: req.file.buffer };
+        s3.upload(param, (err, data) => {
+            if (err) {
+                res.status(401);
+                return res.json({ err });
+            }
+            else {
+                res.status(200);
+                return res.json({
+                    message: "thumbnail uploaded",
+                })
+            }
+        })
+    }
+})
+
+//url : author/uploadPreview
+exports.previewUpload = asyncHandler(async (req, res) => {
+
+    const obj = JSON.parse(JSON.stringify(req.body));
+
+    const courseId = obj.courseId;
+
+    if (req.file) {
+
+        let myCoursePreview = req.file.originalname.split(".");
+        fileExtensionPreview = myCoursePreview[myCoursePreview.length - 1];
+        const course = await Course.findOne({ _id: courseId });
+        const s3 = new aws.S3();
+        await Course.updateOne({ _id: courseId }, {
+
+            previewExtension: fileExtensionPreview
+        }),
+            (err) => {
+                res.status(401);
+                return res.json({ err });
+            }
+
+
+        const previewParam = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${course._id}_preview.${fileExtensionPreview}`, ACL: 'public-read', Body: req.file.buffer };
+        s3.upload(previewParam, (err, data) => {
+            if (err) {
+                res.status(401);
+                return res.json({ err });
+            }
+            else {
+                res.status(200);
+                return res.json({
+                    message: "preview uploaded.",
+                })
+            }
+        })
+    };
 })
 
 //url:  author/showVideo
@@ -364,6 +388,7 @@ exports.showVideo = asyncHandler(async (req, res) => {
         message: `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`,
     })
 })
+
 
 /*exports.trial = asyncHandler(async (req, res) => {
 
@@ -443,4 +468,70 @@ exports.showVideo = asyncHandler(async (req, res) => {
             console.log("uppdate");
         }
     })
+    <Panel header= {sectionData.sectionName} key={sectionData.sectionNumber}>
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel> 
+                    <Panel header="Section 2" key="2">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 3" key="3">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 4" key="4">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 5" key="5">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
+                    <Panel header="Section 6" key="6">
+                        <p>
+                            <a href="#vid">Video1</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video2</a>
+                        </p>
+                        <p>
+                            <a href="#vid">Video3</a>
+                        </p>
+                    </Panel>
 })*/

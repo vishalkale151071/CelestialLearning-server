@@ -127,63 +127,51 @@ exports.verify = asyncHandler(async (req, res) => {
         })
     }
 
-    const token = req.headers.authorization.split(' ')[1];
+    const { email } = jwt.decode(req.token);
+    const subscriber = await Subscriber.findOne({ email });
+    if (subscriber) {
+        if (subscriber.status == "Inactive") {
+            const filter = { email: email }
+            const update = { status: "Active" }
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
+            Subscriber.findOneAndUpdate(filter, update,
+                {
+                    useFindAndModify: false,
+                    new: true
+                },
+                async (err, doc) => {
+                    if (err) {
+
+                        return res.json({
+                            message: "Unregistered token."
+                        })
+                    }
+                    else {
+                        if (doc) {
+
+                            return res.json({ message: "Subscriber Activated." })
+                        }
+                        else {
+                            return res.json({ message: "Unregistered Token." })
+                        }
+                    }
+                }
+            )
         }
         else {
-
-
-            const { email } = jwt.decode(token);
-            const subscriber = await Subscriber.findOne({ email });
-            if (subscriber) {
-                if (subscriber.status == "Inactive") {
-                    const filter = { email: email }
-                    const update = { status: "Active" }
-
-                    Subscriber.findOneAndUpdate(filter, update,
-                        {
-                            useFindAndModify: false,
-                            new: true
-                        },
-                        async (err, doc) => {
-                            if (err) {
-
-                                return res.json({
-                                    message: "Unregistered token."
-                                })
-                            }
-                            else {
-                                if (doc) {
-
-                                    return res.json({ message: "Subscriber Activated." })
-                                }
-                                else {
-                                    return res.json({ message: "Unregistered Token." })
-                                }
-                            }
-                        }
-                    )
-                }
-                else {
-                    return res.json({
-                        message: "You have already activated your account.",
-                    })
-                }
-            }
-            else {
-                return res.json({
-                    message: "This email does not exist",
-                })
-            }
+            return res.json({
+                message: "You have already activated your account.",
+            })
         }
-    })
-});
+    }
+    else {
+        return res.json({
+            message: "This email does not exist",
+        })
+    }
+}
+
+);
 
 //url: subscriber/login
 exports.login = asyncHandler(async (req, res) => {
@@ -313,23 +301,10 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
         })
 
     }
+    const { email } = jwt.decode(req.token);
+    return res.json({
+        message: "success",
 
-    const token = req.headers.authorization.split(' ')[1];
-
-    jwt.verify(token, process.env.JWT_SECRET, (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
-
-        } else {
-            const { email } = jwt.decode(token);
-            return res.json({
-                message: "success",
-
-            })
-        }
     })
 })
 

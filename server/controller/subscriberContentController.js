@@ -87,7 +87,7 @@ exports.payment = asyncHandler(async(req,res)=>{
 })
 
 exports.verification = asyncHandler(async(req,res)=>{
-    const secret = '123456565'
+    const secret = '123456'
     console.log(req.body)
 
 	

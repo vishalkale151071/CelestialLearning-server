@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const { Course, Section, Content } = require('../models/courseModel');
 const asyncHandler = require('express-async-handler');
+const {Subscriber, SubscribedCourses, Order, SubscriberProfile} = require('../models/subscriberModel');
 const { Author, AuthorProfile } = require("../models/authorModel");
 const shortid = require('shortid')
 const Razorpay = require('razorpay')
@@ -48,67 +49,143 @@ exports.courseHome = asyncHandler(async (req, res) => {
 })
 
 //url : subscriber/payment
-exports.payment = asyncHandler(async(req,res)=>{
+exports.payment = asyncHandler(async (req, res) => {
 
-    //const email = req.session.email;
-    //const subscriber = await Subscriber.findOne({email});
-    //const subscriberProfile = await SubscriberProfile.findOne({_id:subscriber.profile_id})
+    const email = req.session.email;
+    const subscriber = await Subscriber.findOne({email});
+    const subscriberProfile = await SubscriberProfile.findOne({_id:subscriber.profile_id})
+    
     const razorpay = new Razorpay({
         key_id: process.env.key_id,
         key_secret: process.env.key_secret
     })
-    console.log("i am here");
+    
     const payment_capture = 1
-	const {price} = req.body;
-	const currency = 'INR'
-    console.log(price)
-	const options = {
-		amount: price*100,
-		currency,
-		receipt: shortid.generate(),
-		payment_capture
-	}
+    const { price, courseTitle } = req.body;
+    const currency = 'INR'
+    
+    
+    const course = await Course.findOne({title: courseTitle});
+    const options = {
+        amount: price * 100,
+        currency,
+        receipt: shortid.generate(),
+        payment_capture
+    }
 
-	try {
-        console.log("i am try catch")
-		const response = await razorpay.orders.create(options)
-		console.log(response)
-		res.json({
-			id: response.id,
+    try {
+        
+        const response = await razorpay.orders.create(options)
+        
+        const order = new Order(
+            {
+                courseId:course._id,
+                price,
+                paymentId : response.id,
+                subscriberId : subscriber._id,
+                status : response.status
+            }
+        );
+        await order.save();
+        
+        res.json({
+            id: response.id,
             currency: response.currency,
             price: response.amount,
-            //name : `${subscriberProfile.firstName} ${subscriberProfile.middleName} ${subscriberProfile.lastName}`,
-            //contact : subscriberProfile.phNum,
-            //email
-		})
-	} catch (error) {
-		console.log(error)
-	}
+            name : `${subscriberProfile.firstName} ${subscriberProfile.middleName} ${subscriberProfile.lastName}`,
+            contact : subscriberProfile.phNum,
+            email
+        })
+    } catch (error) {
+        console.log(error)
+    }
 })
 
-exports.verification = asyncHandler(async(req,res)=>{
+exports.verification = asyncHandler(async (req, res) => {
     const secret = '123456'
-    console.log(req.body)
+    
+    const order = await Order.findOne({paymentId:req.body.payload.payment.entity.order_id});
+    const shasum = crypto.createHmac('sha256', secret)
+    shasum.update(JSON.stringify(req.body))
+    const digest = shasum.digest('hex')
 
-	
-	const shasum = crypto.createHmac('sha256', secret)
-	shasum.update(JSON.stringify(req.body))
-	const digest = shasum.digest('hex')
+    //console.log(digest, req.headers['x-razorpay-signature'])
+    
+    
+    if (digest === req.headers['x-razorpay-signature']) {
+        
+         const subscriber = await Subscriber.findOne({_id: order.subscriberId}); // susbcriber id
+        
+         if (subscriber.subscribedCourses) {
+            
+             const subscribedCourses = await SubscribedCourses.findOne({ _id: subscriber.subscribedCourses })
 
-	console.log(digest, req.headers['x-razorpay-signature'])
-
-	if (digest === req.headers['x-razorpay-signature']) {
-		console.log('request is legit')
-		// process it
-		//require('fs').writeFileSync('payment1.json', JSON.stringify(req.body, null, 4))
-	} else {
-        // pass it
+             await subscribedCourses.courseId.push(order.courseId); // course id
+             await subscribedCourses.save()
+             await Order.update({_id:order._id},{status:req.body.payload.payment.entity.status})
+         } else {
+            
+            const subscribedCourses = new SubscribedCourses();
+            await subscribedCourses.courseId.push(order.courseId); //course id
+            await subscribedCourses.save()
+            await Subscriber.update({ _id: order.subscriberId }, {subscribedCourses : subscribedCourses._id });
+            await Order.update({_id:order._id},{status:req.body.payload.payment.entity.status}) // subscribed course id
+          }
+        console.log('request is legit')
+        
+    } else {
+        
         console.log("request invalid")
-	}
-	res.json({ status: 'ok' })
+    }
+    res.json({ status: 'ok' })
 })
-	// do a validation
-	
 
-	
+// url: subscriber/myCourses
+exports.myCourses  = asyncHandler(async(req,res)=>{
+
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        res.status(400);
+        return res.json({
+            message: errors.array()[0].msg
+        });
+    }
+
+    const email = req.session.email;
+    
+    const subscriber = await Subscriber.findOne({ email });
+   
+    const subscriberCourses = await SubscribedCourses.findOne({_id:subscriber.subscribedCourses})
+    if(subscriberCourses)
+    {
+        const courseData = [];
+        for (i = 0; i < subscriberCourses.courseId.length; i++) {
+            const courses = await Course.findOne({_id:subscriberCourses.courseId[i]})
+            courseData.push({
+                'courseThumbnail': `https://celestiallearning.s3.amazonaws.com/${courses.courseSlug}/${courses._id}_thumbnail.${courses.thumbnailExtension}`,
+                'courseId': courses._id,
+                'courseName': courses.title,
+                'category': courses.category,
+                'price': courses.price
+            });
+        }
+
+        res.status(200);
+        return res.json({
+            // url: url,
+            courseData
+        })
+    }
+    else
+    {
+        res.status(404);
+        return res.json({
+            message : "No subscribed courses yet. "
+        })
+    }
+    
+})
+
+
 

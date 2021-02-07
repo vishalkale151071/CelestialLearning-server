@@ -28,23 +28,23 @@ exports.register = asyncHandler(async (req, res) => {
     const usernameExists = await Subscriber.findOne({ username });
 
     if (password != confirm_password) {
-        res.status(401);
+        res.status(404);
         return res.json({
             message: "Password did not match",
         })
     }
 
     if (usernameExists) {
-        res.status(401);
+        res.status(404);
         return res.json({
             message: "Username is already taken.",
         })
     }
 
     if (emailExists) {
-        res.status(401);
+        res.status(404);
         return res.json({
-            message: "This email is already used.",
+            message: "You are already registered.",
         })
 
     }
@@ -103,8 +103,9 @@ exports.register = asyncHandler(async (req, res) => {
                 })
 
             }
+            res.status(200);
             return res.json({
-                message: `Email has been sent to ${email} ${token}`
+                message: `Email has been sent to ${email}`
             });
         })
         .catch(error => {
@@ -159,6 +160,7 @@ exports.verify = asyncHandler(async (req, res) => {
             )
         }
         else {
+            res.status(404)
             return res.json({
                 message: "You have already activated your account.",
             })
@@ -179,7 +181,7 @@ exports.login = asyncHandler(async (req, res) => {
     if (!error.isEmpty()) {
         res.status(401)
         return res.json({
-            message: "Invalid username",
+            message: "Access denied",
         })
 
     }
@@ -209,12 +211,14 @@ exports.login = asyncHandler(async (req, res) => {
             req.session.email = email;
             req.session.token = token;
             const ck = cookie.sign(req.sessionID, '12345');
+            res.status(200);
             return res.json({
                 message: " You are logged in successfully.",
                 target: ck,
             })
         }
         else {
+            res.status(404)
             return res.json({
                 message: "Please activate your account.",
             })
@@ -222,6 +226,7 @@ exports.login = asyncHandler(async (req, res) => {
 
     }
     else {
+        res.status(404)
         return res.json({
             message: "Incorrect username or password.",
         })
@@ -267,7 +272,7 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
             html: `
                     <h1>Please use the following Link to reset your password</h1>
                     
-                    <p>${process.env.CLIENT_URL}/subscriber/verify/${token}</p>
+                    <p>${process.env.CLIENT_URL}/subscriber/forgetverify/${token}</p>
                     <hr />
                     <p>This Email Contains Sensitive Information</p>
                     <p>${process.env.CLIENT_URL}</p>
@@ -278,7 +283,7 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
             .send(emailData)
             .then(sent => {
                 return res.json({
-                    message: token
+                    message: `Password reset link is sent to ${email}`
                 });
             })
             .catch(error => {
@@ -303,7 +308,7 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
     }
     const { email } = jwt.decode(req.token);
     return res.json({
-        message: "success",
+        message: "Verified.",
 
     })
 })
@@ -346,7 +351,9 @@ exports.updatepassword = asyncHandler(async (req, res) => {
         { password: new_password },
         (err) => {
             if (err) {
-                console.log(err)
+                return res.json({
+                    message : "Error while updating."
+                })
             }
             else {
                 return res.json({

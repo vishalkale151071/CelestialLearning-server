@@ -19,7 +19,7 @@ exports.courseHome = asyncHandler(async (req, res) => {
         });
     }
     const { courseTitle } = req.body;
-
+    
     const course = await Course.findOne({ title: courseTitle });
     const content = await Content.findOne({ _id: course.content });
     const sectionsId = content.section;
@@ -157,24 +157,34 @@ exports.myCourses  = asyncHandler(async(req,res)=>{
     const subscriber = await Subscriber.findOne({ email });
    
     const subscriberCourses = await SubscribedCourses.findOne({_id:subscriber.subscribedCourses})
-  
-    const courseData = [];
-    for (i = 0; i < subscriberCourses.courseId.length; i++) {
-        const courses = await Course.findOne({_id:subscriberCourses.courseId[i]})
-        courseData.push({
-            'courseThumbnail': `https://celestiallearning.s3.amazonaws.com/${courses.courseSlug}/${courses._id}_thumbnail.${courses.thumbnailExtension}`,
-            'courseId': courses._id,
-            'courseName': courses.title,
-            'category': courses.category,
-            'price': courses.price
-        });
-    }
+    if(subscriberCourses)
+    {
+        const courseData = [];
+        for (i = 0; i < subscriberCourses.courseId.length; i++) {
+            const courses = await Course.findOne({_id:subscriberCourses.courseId[i]})
+            courseData.push({
+                'courseThumbnail': `https://celestiallearning.s3.amazonaws.com/${courses.courseSlug}/${courses._id}_thumbnail.${courses.thumbnailExtension}`,
+                'courseId': courses._id,
+                'courseName': courses.title,
+                'category': courses.category,
+                'price': courses.price
+            });
+        }
 
-    res.status(200);
-    return res.json({
-        // url: url,
-        courseData
-    })
+        res.status(200);
+        return res.json({
+            // url: url,
+            courseData
+        })
+    }
+    else
+    {
+        res.status(404);
+        return res.json({
+            message : "No subscribed courses yet. "
+        })
+    }
+    
 })
 
 

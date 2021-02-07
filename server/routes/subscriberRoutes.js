@@ -55,7 +55,7 @@ router.post(
     forgetpasswordverify
 );
 router.post(
-    '/updatepassword', isLoggedIn,
+    '/updatepassword',
     [
         check("new_password", "Password is weak."),
         check("confirm_password", "Passwords do not match."),
@@ -87,6 +87,7 @@ router.post(
     '/emailchange', isLoggedIn,
     [
         check("new_email", "Email should be valid.").isEmail(),
+        check("password", "Enter strong password."),
     ], emailChange
 );
 

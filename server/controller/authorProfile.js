@@ -125,7 +125,6 @@ exports.profileImageUpdate = asyncHandler(async (req, res) => {
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const _id = author._id;
-
     if (req.file) {
         let myImage = req.file.originalname.split(".");
         fileExtension = myImage[myImage.length - 1];

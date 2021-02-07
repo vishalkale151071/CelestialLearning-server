@@ -35,8 +35,16 @@ app.use(session({
     })
 }))
 
+console.log(`${__dirname}`)
+app.get('/favicon.ico', async (req, res) => {
+    res.status(200);
+    res.sendFile(`${__dirname}/CL.png`);
+});
 
-
+app.get('/logo192.png', async (req, res) => {
+    res.status(200);
+    res.sendFile(`${__dirname}/CL.png`);
+});
 app.use('/subscriber', subscriberRoutes);
 app.use('/author', authorRoutes);
 app.use('/plugin', pluginRoutes);

@@ -6,7 +6,7 @@ require('dotenv').config();
 //url : /homePage
 exports.homePage = asyncHandler(async(req,res)=>{
     const course = await Course.find();
-    console.log(course);
+    
     const courseData = [];
     for(i=0;i<course.length;i++)
     {

@@ -299,7 +299,7 @@ exports.thumbnailUpload = asyncHandler(async (req, res) => {
     const obj = JSON.parse(JSON.stringify(req.body));
 
     const courseId = obj.courseId;
-
+    console.log("ncdbhjfcfdh"+courseId);
     if (req.file) {
         let myCourseThumbnail = req.file.originalname.split(".");
         fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];

@@ -43,7 +43,51 @@ const subscriberProfile = mongoose.Schema(
   versionKey: false,
 }
 );
-const SubscriberProfile = mongoose.model('SubscriberProfile', subscriberProfile)
+const SubscriberProfile = new mongoose.model('SubscriberProfile', subscriberProfile)
+
+const orderSchema = mongoose.Schema(
+  {
+    
+    courseId: [{
+      type: String,
+      required: true,
+      
+    }],
+    paymentId: {
+      type: String,
+      default: "NA",
+      
+    },
+    status: {
+      type: String,
+      default:"Incomplete"
+    },
+    price: [{
+      type: Number,
+      required:true
+    }],
+    subscriberId : {
+      type: String,
+    }
+  }, {
+  versionKey: false,
+}
+);
+
+const Order = new mongoose.model('Order', orderSchema);
+
+const subscribedCoursesSchema = mongoose.Schema(
+  {
+      courseId : [{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Course'
+      }]
+  }, {
+  versionKey: false,
+}
+);
+
+const SubscribedCourses = new mongoose.model('SubscribedCourses', subscribedCoursesSchema);
 
 const subscriberSchema = mongoose.Schema(
   {
@@ -68,11 +112,16 @@ const subscriberSchema = mongoose.Schema(
     profile_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SubscriberProfile"
-    }
+    },
+    subscribedCourses: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SubscribedCourses',
+  } 
   }, {
   versionKey: false,
 }
 );
+
 
 
 
@@ -91,6 +140,9 @@ subscriberSchema.pre('save', async function (next) {
   const profile = new SubscriberProfile();
   profile.save();
   this.profile_id = profile._id;
+  // const subscribedCourses = new SubscribedCourses();
+  // subscribedCourses.save();
+  // this.subscribedCourses = subscribedCourses._id;
 })
 
 subscriberSchema.pre('updateOne', async function (next) {
@@ -98,8 +150,8 @@ subscriberSchema.pre('updateOne', async function (next) {
   this._update.password = await bcrypt.hash(this._update.password, salt)
 })
 
-const Subscriber = mongoose.model('Subscriber', subscriberSchema)
+const Subscriber = new mongoose.model('Subscriber', subscriberSchema)
 
 
-module.exports = { Subscriber: Subscriber, SubscriberProfile: SubscriberProfile }
+module.exports = { Subscriber: Subscriber, SubscriberProfile: SubscriberProfile, SubscribedCourses: SubscribedCourses, Order:Order}
 

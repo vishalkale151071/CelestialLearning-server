@@ -11,7 +11,7 @@ exports.createContent = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json(
             {
                 message: errors.array()[0].msg
@@ -56,7 +56,7 @@ exports.createContent = asyncHandler(async (req, res) => {
         });
     }
     catch (err) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: `Error ${err}`,
         })
@@ -70,7 +70,7 @@ exports.createSection = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json(
             {
                 message: errors.array()[0].msg
@@ -92,11 +92,12 @@ exports.createSection = asyncHandler(async (req, res) => {
         const params = { Bucket: process.env.BUCKET_NAME, Key: `${course.courseSlug}/${slug(section.sectionName)}/`, ACL: 'public-read', Body: 'body does not matter' };
         s3.upload(params, (err, data) => {
             if (err) {
-                console.log(err)
+                res.status(401);
+                return res.json({
+                    message: `Error ${err}`,
+                })
             }
-            else {
-                console.log(data)
-            }
+            
         })
 
         if (course.content) {
@@ -119,7 +120,7 @@ exports.createSection = asyncHandler(async (req, res) => {
         });
     }
     catch (err) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: `Error ${err}`,
         })
@@ -133,7 +134,7 @@ exports.myCourses = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: errors.array()[0].msg
         });
@@ -142,22 +143,32 @@ exports.myCourses = asyncHandler(async (req, res) => {
     const email = req.session.email;
     const author = await Author.findOne({ email });
     const courses = await Course.find({ author: author._id });
-    const data = [];
-    for (i = 0; i < courses.length; i++) {
-        data.push({
-            'thumbnail': `https://celestiallearning.s3.amazonaws.com/${courses[i].courseSlug}/${courses[i]._id}_thumbnail.${courses[i].thumbnailExtension}`,
-            'courseId': courses[i]._id,
-            'courseName': courses[i].title,
-            'category': courses[i].category,
-            'price': courses[i].price
-        });
-    }
+    if(courses.length>0)
+    {
+        const courseData = [];
+        for (i = 0; i < courses.length; i++) {
+            courseData.push({
+                'courseThumbnail': `https://celestiallearning.s3.amazonaws.com/${courses[i].courseSlug}/${courses[i]._id}_thumbnail.${courses[i].thumbnailExtension}`,
+                'courseId': courses[i]._id,
+                'courseName': courses[i].title,
+                'category': courses[i].category,
+                'price': courses[i].price
+            });
+        }
 
-    res.status(200);
-    return res.json({
-        // url: url,
-        data
-    })
+        res.status(200);
+        return res.json({
+            courseData
+        })
+    }
+    else
+    {
+        res.status(401);
+        return res.json({
+            message : "No courses created..."
+        })
+    }
+    
 });
 
 //url:  author/course/sections
@@ -165,7 +176,7 @@ exports.courseSections = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: errors.array()[0].msg
         });
@@ -181,54 +192,64 @@ exports.courseSections = asyncHandler(async (req, res) => {
 
     const sectionData = []
 
-    for (i = 0; i < sections.length; i++) {
+    if(sections.length>0)
+    {
+        for (i = 0; i < sections.length; i++) {
 
-        const sdata = await Section.findOne({ _id: sections[i] });
+            const sdata = await Section.findOne({ _id: sections[i] });
 
-        const videos = sdata.video;
+            const videos = sdata.video;
 
 
-        if (videos.length == 0) {
-            sectionData.push({
-                "sectionId": sdata._id,
-                "number": sdata.number,
-                "sectionName": sdata.sectionName,
-                "videoId": "NIL",
-                "videoName": "NIL"
-            })
-        }
-        else {
-            const videoData = []
-            for (j = 0; j < videos.length; j++) {
-
-                const vdata = await Video.findOne({ _id: videos[j] });
-
-                var path = vdata.videoSlug;
-                path = path.split("_");
-                const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`;
-                console.log(url)
-                videoData.push({
-                    "videoId": vdata._id,
-                    "videoName": vdata.name,
-                    "videoURL": url,
+            if (videos.length == 0) {
+                sectionData.push({
+                    "sectionId": sdata._id,
+                    "number": sdata.number,
+                    "sectionName": sdata.sectionName,
+                    "videoId": "NIL",
+                    "videoName": "NIL"
                 })
-
             }
-            sectionData.push({
-                "sectionId": sdata._id,
-                "number": sdata.number,
-                "sectionName": sdata.sectionName,
-                "video": videoData,
-            })
-            console.log(sectionData);
+            else {
+                const videoData = []
+                for (j = 0; j < videos.length; j++) {
+
+                    const vdata = await Video.findOne({ _id: videos[j] });
+
+                    var path = vdata.videoSlug;
+                    path = path.split("_");
+                    const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`;
+                    console.log(url)
+                    videoData.push({
+                        "videoId": vdata._id,
+                        "videoName": vdata.name,
+                        "videoURL": url,
+                    })
+
+                }
+                sectionData.push({
+                    "sectionId": sdata._id,
+                    "number": sdata.number,
+                    "sectionName": sdata.sectionName,
+                    "video": videoData,
+                })
+                console.log(sectionData);
+            }
         }
+
+        res.status(200);
+        return res.json({
+            sections: sectionData,
+
+        });
     }
-
-    res.status(200);
-    return res.json({
-        sections: sectionData,
-
-    });
+    else
+    {
+        res.status(401);
+        return res.json({
+            message : "No section data available.."
+        })
+    }
 });
 
 //url:  author/add-video
@@ -237,17 +258,17 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: errors.array()[0].msg
         });
     }
 
-    //const obj = JSON.parse(JSON.stringify(req.body));
+    const obj = JSON.parse(JSON.stringify(req.body));
 
-    //const vedioName = obj.vedioName
-    //const sectionId = obj.sectionId
-    const { vedioName, sectionId } = req.body;
+    const vedioName = obj.vedioName
+    const sectionId = obj.sectionId
+    //const { vedioName, sectionId } = req.body;
     let myVideo = req.file.originalname.split(".");
     const fileExtension = myVideo[myVideo.length - 1];
 
@@ -279,7 +300,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     }
     s3.upload(params, (error, data) => {
         if (error) {
-            res.status(500);
+            res.status(401);
             return res.json({
                 message: `Error while uploading`,
             })
@@ -287,7 +308,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
         else {
             res.status(200);
             return res.json({
-                message: `successful`,
+                message: `Video uploaded successfully`,
             })
         }
     })
@@ -299,7 +320,7 @@ exports.thumbnailUpload = asyncHandler(async (req, res) => {
     const obj = JSON.parse(JSON.stringify(req.body));
 
     const courseId = obj.courseId;
-
+    
     if (req.file) {
         let myCourseThumbnail = req.file.originalname.split(".");
         fileExtensionThumbnail = myCourseThumbnail[myCourseThumbnail.length - 1];
@@ -323,7 +344,7 @@ exports.thumbnailUpload = asyncHandler(async (req, res) => {
             else {
                 res.status(200);
                 return res.json({
-                    message: "thumbnail uploaded",
+                    message: "Thumbnail uploaded successfully.",
                 })
             }
         })
@@ -362,7 +383,7 @@ exports.previewUpload = asyncHandler(async (req, res) => {
             else {
                 res.status(200);
                 return res.json({
-                    message: "preview uploaded.",
+                    message: "Preview uploaded successfully.",
                 })
             }
         })
@@ -374,19 +395,31 @@ exports.showVideo = asyncHandler(async (req, res) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        res.status(400);
+        res.status(401);
         return res.json({
             message: errors.array()[0].msg
         });
     }
     const { videoId } = req.body;
     const video = await Video.findOne({ _id: videoId });
-    var path = video.videoSlug;
-    path = path.split("_");
+    if(video)
+    {
+        var path = video.videoSlug;
+        path = path.split("_");
 
-    res.json({
-        message: `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`,
-    })
+        res.status(200);
+        return res.json({
+            message: `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`,
+        })
+    }
+    else
+    {
+        res.status(401);
+        return res.json({
+            message : "No available video to show!"
+        })
+    }
+    
 })
 
 

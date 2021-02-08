@@ -76,7 +76,7 @@ exports.profileImageView = asyncHandler(async (req, res) => {
             })
         }
         else {
-            res.status(200);
+            res.status(404);
             return res.json({
                 message: "No such profile available"
             })
@@ -106,7 +106,7 @@ exports.update = asyncHandler(async (req, res) => {
         )
         res.status(200);
         return res.json({
-            message: "profile updated successfully"
+            message: "Profile updated successfully"
         })
 
     }
@@ -114,7 +114,7 @@ exports.update = asyncHandler(async (req, res) => {
     else {
         res.status(200);
         return res.json({
-            message: "no such author exists.",
+            message: "no such subcsriber exists.",
         })
     }
 });
@@ -156,21 +156,28 @@ exports.profileImageUpdate = asyncHandler(async (req, res) => {
             else {
                 res.status(200);
                 return res.json({
-                    message: "profile image updated successfully"
+                    message: "Profile image updated successfully"
                 })
             }
         })
     }
 })
 
-
 //url:  subscriber/emailChange
 exports.emailChange = asyncHandler(async (req, res) => {
 
+    console.log(req.session.email);
     const { new_email, password } = req.body;
     const email = req.session.email;
     const user = await Subscriber.findOne({ email });
 
+    if(email==new_email)
+    {
+        res.status(404);
+        return res.json({
+            message: "Current email address entered."
+        })
+    }
     if (user && (await user.matchPassword(password))) {
         const subscriber = await Subscriber.findOne({ email: new_email });
 
@@ -191,7 +198,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 html: `
                             <h1>Please use the following Link to reset your email address</h1>
                             
-                            <p>${process.env.CLIENT_URL}/subscriber/verify/${token}</p>
+                            <p>${process.env.CLIENT_URL}/subscriber/verify1/${token}</p>
                             <hr />
                             <p>This Email Contains Sensitive Information</p>
                             <p>${process.env.CLIENT_URL}</p>
@@ -202,7 +209,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 .send(emailData)
                 .then(sent => {
                     return res.json({
-                        message: `Email has been sent to ${new_email} ${token}`
+                        message: `Email has been sent to ${new_email}`
                     });
                 })
                 .catch(error => {
@@ -213,15 +220,17 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 });
         }
         else {
+            res.status(404);
             return res.json({
-                message: "email id already registered."
+                message: "Email id already registered."
             })
         }
 
     }
     else {
+        res.status(404);
         return res.json({
-            message: "incorrect password",
+            message: "Incorrect password",
         })
     }
 
@@ -257,13 +266,15 @@ exports.verify1 = asyncHandler(async (req, res) => {
             },
         )
         req.session.email = new_email;
+        res.status(200)
         return res.json({
-            message: "your email has been updated."
+            message: "Your email has been updated."
         })
     }
     else {
+        res.status(404)
         return res.json({
-            message: "no such user.",
+            message: "Not registered.",
         })
     }
 });
@@ -283,6 +294,7 @@ exports.passwordChange = asyncHandler(async (req, res) => {
                     console.log(err)
                 }
                 else {
+                    res.status(200)
                     return res.json({
                         message: "Password changed",
                     })
@@ -291,6 +303,7 @@ exports.passwordChange = asyncHandler(async (req, res) => {
         )
     }
     else {
+        res.status(404)
         return res.json({
             message: "Incorrect password",
         })

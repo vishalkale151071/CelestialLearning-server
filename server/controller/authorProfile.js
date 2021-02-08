@@ -34,14 +34,14 @@ exports.profile = asyncHandler(async (req, res) => {
             );
         }
         else {
-            res.status(200);
+            res.status(401);
             return res.json({
                 message: "Profile not added.",
             })
         }
     }
     else {
-        res.status(200);
+        res.status(401);
         return res.json({
             message: "Incorrect author details.",
         })
@@ -75,7 +75,7 @@ exports.profileImageView = asyncHandler(async (req, res) => {
             })
         }
         else {
-            res.status(200);
+            res.status(401);
             return res.json({
                 message: "No such profile available"
             })
@@ -111,7 +111,7 @@ exports.update = asyncHandler(async (req, res) => {
     }
 
     else {
-        res.status(200);
+        res.status(401);
         return res.json({
             message: "no such author exists.",
         })
@@ -146,7 +146,7 @@ exports.profileImageUpdate = asyncHandler(async (req, res) => {
     if (flag == 1) {
         s3.upload(params, (error, data) => {
             if (error) {
-                res.status(500);
+                res.status(401);
                 return res.json({
                     message: `Error while uploading`,
                 })
@@ -154,7 +154,7 @@ exports.profileImageUpdate = asyncHandler(async (req, res) => {
             else {
                 res.status(200);
                 return res.json({
-                    message: "profile image updated successfully"
+                    message: "Profile image updated successfully"
                 })
             }
         })
@@ -167,7 +167,13 @@ exports.emailChange = asyncHandler(async (req, res) => {
     const { new_email, password } = req.body;
     const email = req.session.email;
     const author = await Author.findOne({ email });
-
+    if(email==new_email)
+    {
+        res.status(401);
+        return res.json({
+            message: "Current email address entered."
+        })
+    }
     if (author && (await author.matchPassword(password))) {
         const author = await Author.findOne({ email: new_email });
 
@@ -188,7 +194,7 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 html: `
                             <h1>Please use the following Link to reset your email address</h1>
                             
-                            <p>${process.env.CLIENT_URL}/author/verify/${token}</p>
+                            <p>${process.env.CLIENT_URL}/author/verify1/${token}</p>
                             <hr />
                             <p>This Email Contains Sensitive Information</p>
                             <p>${process.env.CLIENT_URL}</p>
@@ -200,28 +206,28 @@ exports.emailChange = asyncHandler(async (req, res) => {
                 .then(sent => {
                     res.status(200);
                     return res.json({
-                        message: token
+                        message: `Email has been sent to ${new_email}`
                     });
                 })
                 .catch(error => {
-                    res.status(400)
+                    res.status(401)
                     return res.json({
                         message: "Error while sending an email",
                     });
                 });
         }
         else {
-            res.status(200);
+            res.status(401);
             return res.json({
-                message: "email id already registered."
+                message: "Email id already registered."
             })
         }
 
     }
     else {
-        res.status(200);
+        res.status(401);
         return res.json({
-            message: "incorrect password",
+            message: "Incorrect password",
         })
     }
 
@@ -237,46 +243,35 @@ exports.verify1 = asyncHandler(async (req, res) => {
             message: "Token is missing",
         })
     }
+       
+    const { new_email } = jwt.decode(req.token);
 
-    const token = req.headers.authorization.split(' ')[1];
+    const email = req.session.email;
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
-        }
-        else {
-            const { new_email } = jwt.decode(token);
-
-            const email = req.session.email;
-
-            const author = await Author.findOne({ email });
-            if (author) {
+    const author = await Author.findOne({ email });
+    if (author) {
 
 
-                const filter = { _id: author._id }
-                const update = { email: new_email }
+        const filter = { _id: author._id }
+        const update = { email: new_email }
 
-                await Author.findOneAndUpdate(filter, update,
-                    {
-                        useFindAndModify: false,
-                        new: true
-                    },
-                )
-                req.session.email = new_email;
-                return res.json({
-                    message: "your email has been updated."
-                })
-            }
-            else {
-                return res.json({
-                    message: "no such author.",
-                })
-            }
-        }
-    })
+        await Author.findOneAndUpdate(filter, update,
+            {
+                useFindAndModify: false,
+                new: true
+            },
+        )
+        req.session.email = new_email;
+        return res.json({
+            message: "Your email has been updated."
+        })
+    }
+    else {
+        return res.json({
+            message: "no such author.",
+        })
+    }
+       
 });
 
 //url: author/passwordchange
@@ -294,6 +289,7 @@ exports.passwordChange = asyncHandler(async (req, res) => {
                     console.log(err)
                 }
                 else {
+                    res.status(200)
                     return res.json({
                         message: "Password changed",
                     })
@@ -302,6 +298,7 @@ exports.passwordChange = asyncHandler(async (req, res) => {
         )
     }
     else {
+        res.status(401)
         return res.json({
             message: "Incorrect password",
         })

@@ -306,7 +306,7 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
         })
 
     }
-    const { email } = jwt.decode(req.token);
+    res.status(200)
     return res.json({
         message: "Verified.",
 
@@ -351,11 +351,13 @@ exports.updatepassword = asyncHandler(async (req, res) => {
         { password: new_password },
         (err) => {
             if (err) {
+                res.status(401)
                 return res.json({
                     message : "Error while updating."
                 })
             }
             else {
+                res.status(200)
                 return res.json({
                     message: "Password changed",
                 })

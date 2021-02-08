@@ -78,7 +78,7 @@ exports.register = asyncHandler(async (req, res) => {
         html: `
                 <h1>Please use the following Link to Activate your Account</h1>
             
-                <p>${process.env.CLIENT_URL}/author/verify/token${token}</p>
+                <p>${process.env.CLIENT_URL}/author/verify/${token}</p>
                 <hr />
                 <p>This Email Contains Sensitive Information</p>
                 <p>${process.env.CLIENT_URL}</p>
@@ -90,21 +90,22 @@ exports.register = asyncHandler(async (req, res) => {
         .then(async sent => {
             try {
                 await author.save();
-                res.status(200);
+                
                 console.log("Author data saved.");
             }
             catch (err) {
+                res.status(401)
                 res.json({
                     message: "Error",
                 })
 
             }
             return res.json({
-                message: `Email has been sent to ${email} ${token}`
+                message: `Email has been sent to ${email}`
             });
         })
         .catch(error => {
-            res.status(400)
+            res.status(401)
             return res.json({
                 message: "Error while sending activation link",
             })
@@ -122,60 +123,56 @@ exports.verify = asyncHandler(async (req, res) => {
         })
     }
 
-    const token = req.headers.authorization.split(' ')[1];
-    jwt.verify(token, process.env.JWT_SECRET, async (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
+    const { email } = jwt.decode(req.token);
+    const author = await Author.findOne({ email });
+    if (author) {
+        if (author.status == "Inactive") {
+            const filter = { email: email }
+            const update = { status: "Active" }
+
+            Author.findOneAndUpdate(filter, update,
+                {
+                    useFindAndModify: false,
+                    new: true
+                },
+                (err, doc) => {
+                    if (err) {
+                        console.log(err)
+                        res.status(401)
+                        return res.json({
+                            message: "Unregistered token."
+                        })
+                    }
+                    else {
+                        if (doc) {
+                            res.status(200)
+                            return res.json({ message: "Author Activated." })
+                        }
+                        else {
+                            res.status(401)
+                            return res.json({ message: "Unregistered Token." })
+                        }
+                    }
+                }
+            )
         }
         else {
-            const { email } = jwt.decode(token);
-            const author = await Author.findOne({ email });
-            if (author) {
-                if (author.status == "Inactive") {
-                    const filter = { email: email }
-                    const update = { status: "Active" }
-
-                    Author.findOneAndUpdate(filter, update,
-                        {
-                            useFindAndModify: false,
-                            new: true
-                        },
-                        (err, doc) => {
-                            if (err) {
-                                console.log(err)
-                                res.json({
-                                    msg: "Unregistered token."
-                                })
-                            }
-                            else {
-                                if (doc) {
-                                    res.json({ msg: "Author Activated." })
-                                }
-                                else {
-                                    res.json({ msg: "Unregistered Token." })
-                                }
-                            }
-                        }
-                    )
-                }
-                else {
-                    return res.json({
-                        message: "You have already activated your account.",
-                    })
-                }
-            }
-
-            else {
-                return res.json({
-                    message: "You have already activated your account.",
-                })
-            }
+            res.status(401)
+            return res.json({
+                message: "You have already activated your account.",
+            })
         }
-    })
+    }
+
+    else {
+        res.status(401)
+        return res.json({
+            message: "You have already activated your account.",
+        })
+    }
+    
 })
+
 
 //url: author/login
 exports.login = asyncHandler(async (req, res) => {
@@ -193,7 +190,7 @@ exports.login = asyncHandler(async (req, res) => {
     const author = await Author.findOne({ email });
 
     if (!author) {
-        res.status(404);
+        res.status(401);
         return res.json({
             message: "You are not registered.",
         })
@@ -212,6 +209,7 @@ exports.login = asyncHandler(async (req, res) => {
             )
             req.session.email = email;
             req.session.token = token;
+            res.status(200)
             return res.json({
                 message: " You are logged in successfully.",
                 "_id": await author.id,
@@ -249,7 +247,7 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
 
     const author = await Author.findOne({ email });
     if (!author) {
-        res.status(404);
+        res.status(401);
         return res.json({
             message: "Incorrect email id. Please enter registered email id.",
         })
@@ -273,7 +271,7 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
             html: `
                     <h1>Please use the following Link to reset your password</h1>
                     
-                    <p>${process.env.CLIENT_URL}/author/verify/${token}</p>
+                    <p>${process.env.CLIENT_URL}/author/forgetverify/${token}</p>
                     <hr />
                     <p>This Email Contains Sensitive Information</p>
                     <p>${process.env.CLIENT_URL}</p>
@@ -283,8 +281,9 @@ exports.forgetpassword = asyncHandler(async (req, res) => {
         sgMail
             .send(emailData)
             .then(sent => {
+                res.status(200)
                 return res.json({
-                    message: token
+                    message: `Password reset link is sent to ${email}`
                 });
             })
             .catch(error => {
@@ -307,24 +306,12 @@ exports.forgetpasswordverify = asyncHandler(async (req, res) => {
         })
 
     }
+    res.status(200)
+    return res.json({
+        message: "Verified.",
 
-    const token = req.headers.authorization.split(' ')[1];
-
-    jwt.verify(token, process.env.JWT_SECRET, (err) => {
-        if (err) {
-            res.status(401)
-            return res.json({
-                message: "Token expires or invalid",
-            })
-
-        } else {
-            const { email } = jwt.decode(token);
-            return res.json({
-                message: "success",
-
-            })
-        }
     })
+        
 })
 
 //url: author/updatepassword
@@ -365,9 +352,13 @@ exports.updatepassword = asyncHandler(async (req, res) => {
         { password: new_password },
         (err) => {
             if (err) {
-                console.log(err)
+                res.status(401)
+                return res.json({
+                    message : "Error while updating."
+                })
             }
             else {
+                res.status(200)
                 return res.json({
                     message: "Password changed",
                 })

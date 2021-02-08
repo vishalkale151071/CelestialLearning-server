@@ -57,7 +57,7 @@ router.post(
 );
 
 router.post(
-    '/updatepassword', isLoggedIn,
+    '/updatepassword', 
     [
         check("new_password", "Password is weak."),
         check("confirm_password", "Passwords do not match."),
@@ -93,7 +93,7 @@ router.post(
 router.post(
     '/verify1', protect,
     [
-        check("token", "Token can't be empty.").exists(),
+       
     ], verify1
 );
 
@@ -120,7 +120,7 @@ router.post(
     createSection
 );
 
-router.post('/courses', isLoggedIn, [], myCourses);
+router.get('/courses', isLoggedIn, [], myCourses);
 
 router.post(
     '/course/sections', isLoggedIn,

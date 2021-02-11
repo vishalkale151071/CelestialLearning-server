@@ -3,11 +3,15 @@ const { Course } = require('../models/courseModel');
 const asyncHandler = require('express-async-handler')
 require('dotenv').config();
 
-//url : /homePage
-exports.homePage = asyncHandler(async(req,res)=>{
-    const course = await Course.find();
+//url : /getCourses
+exports.getCourses = asyncHandler(async(req,res)=>{
+   
+    const {category} = req.body;
+   
+    const course = await Course.find({category});
     
     const courseData = [];
+    let i; 
     for(i=0;i<course.length;i++)
     {
         const author = await Author.findOne({_id:course[i].author});
@@ -21,6 +25,7 @@ exports.homePage = asyncHandler(async(req,res)=>{
         })
         
     }
+    
     res.status(200);
     return res.json({
         courseData

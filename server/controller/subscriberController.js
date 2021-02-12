@@ -79,8 +79,7 @@ exports.register = asyncHandler(async (req, res) => {
         from: process.env.EMAIL_FROM,
         to: email,
         subject: 'Account activation Link',
-        html: `
-                <h1>Please use the following Link to Activate your Account</h1>
+        html: `<h1>Please use the following Link to Activate your Account</h1>
             
                 <p>${process.env.CLIENT_URL}/subscriber/verify/${token}</p>
                 <hr />

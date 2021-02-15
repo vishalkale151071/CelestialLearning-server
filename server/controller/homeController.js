@@ -41,7 +41,15 @@ exports.search = asyncHandler(async(req,res)=>{
         }
     }).limit(10);
     console.log(results)
+    const resultData = []
+    for(i=0;i<results.length;i++)
+    {
+        resultData.push({
+            "courseId" : results[i]._id,
+            "courseName" : results[i].title
+        })
+    }
     return res.json({
-        results
+        resultData
     })
 })

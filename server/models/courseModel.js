@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const videoSchema = mongoose.Schema({
     name: {
         type: String,
@@ -60,28 +61,34 @@ const courseSchema = mongoose.Schema(
             type: String,
             required: true,
             unique: true,
+            
         },
         description: {
             type: String,
-            required: true
+            required: true,
+           
         },
         price: {
             type: Number,
             required: false,
-            default: 0
+            default: 0,
+            
         },
         suitableFor: [{
-            type: String
+            type: String,
+          
         }],
         platform: {
             type: String
         },
         category: {
             type: String,
-            required: true
+            required: true,
+          
         },
         prerequisite: [{
-            type: String
+            type: String,
+            
         }],
         courseSlug: {
             type: String
@@ -103,7 +110,10 @@ const courseSchema = mongoose.Schema(
 }
 );
 
+
+
 const Course = new mongoose.model('Course', courseSchema);
+
 
 module.exports = {
     Course: Course,

@@ -37,12 +37,8 @@ app.use(session({
     })
 }));
 
-<<<<<<< HEAD
 console.log(`${__dirname}`)
 app.get('/api/favicon.ico', async (req, res) => {
-=======
-app.get('/favicon.ico', async (req, res) => {
->>>>>>> f3922229f2e89c7c11f449abf9662c45ad594ec6
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
 });

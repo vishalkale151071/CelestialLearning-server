@@ -104,7 +104,11 @@ const courseSchema = mongoose.Schema(
         content: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Content',
-        }
+        },
+        status : {
+            type: String,
+            default : "0"
+        }   
     }, {
     versionKey: false,
 }

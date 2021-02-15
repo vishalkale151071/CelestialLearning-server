@@ -31,3 +31,17 @@ exports.getCourses = asyncHandler(async(req,res)=>{
         courseData
     })
 })
+
+exports.search = asyncHandler(async(req,res)=>{
+    const searchField = req.query.param;
+    console.log(searchField);
+    const results = await Course.find({
+        title: {
+            $regex : searchField,$options: '$i'
+        }
+    }).limit(10);
+    console.log(results)
+    return res.json({
+        results
+    })
+})

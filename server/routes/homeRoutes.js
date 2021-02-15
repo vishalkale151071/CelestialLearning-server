@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const { check } = require("express-validator");
 const multer = require('multer');
-const {getCourses} = require('../controller/homeController');
+const {getCourses,search} = require('../controller/homeController');
 
 router.post(
     '/getCourses',
@@ -10,4 +10,7 @@ router.post(
     ], getCourses
 );
 
+router.get(
+    '/search',[],search
+)
 module.exports = router

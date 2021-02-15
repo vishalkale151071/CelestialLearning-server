@@ -14,7 +14,9 @@ const MongoStore = require('connect-mongo')(session);
 const mongoose = require('mongoose');
 const { param } = require('./routes/authorRoutes');
 const { logout } = require('./controller/logout');
-const { homePage } = require('./controller/homeController');
+const homeRoutes = require('./routes/homeRoutes');
+const courseRoutes = require('./routes/courseRoutes')
+const paymentRoutes = require('./routes/paymentRoutes')
 connectDB();
 
 const app = express();
@@ -35,8 +37,12 @@ app.use(session({
     })
 }));
 
+<<<<<<< HEAD
 console.log(`${__dirname}`)
 app.get('/api/favicon.ico', async (req, res) => {
+=======
+app.get('/favicon.ico', async (req, res) => {
+>>>>>>> f3922229f2e89c7c11f449abf9662c45ad594ec6
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
 });
@@ -48,8 +54,13 @@ app.get('/api/logo192.png', async (req, res) => {
 app.use('/api/subscriber', subscriberRoutes);
 app.use('/api/author', authorRoutes);
 app.use('/api/plugin', pluginRoutes);
+app.use('/api/home',homeRoutes);
+app.use('/api/course',courseRoutes);
+app.use('/api/payment',paymentRoutes);
 app.post('/api/logout', logout);
-app.get('/api/homePage', homePage);
+
+
+
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));

@@ -2,6 +2,9 @@ const asyncHandler = require('express-async-handler');
 
 exports.logout = asyncHandler(async (req, res, next) => {
     if (req.session) {
+        
+        res.clearCookie('connect.sid')
+        
         req.session.destroy((err) => {
             if (err) {
                 return next(err);

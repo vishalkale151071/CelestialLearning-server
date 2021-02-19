@@ -3,7 +3,7 @@ const { Course } = require('../models/courseModel');
 const asyncHandler = require('express-async-handler')
 require('dotenv').config();
 
-//url : /getCourses
+//url : /home/getCourses
 exports.getCourses = asyncHandler(async(req,res)=>{
    
     const {category} = req.body;
@@ -41,7 +41,15 @@ exports.search = asyncHandler(async(req,res)=>{
         }
     }).limit(10);
     console.log(results)
+    const resultData = []
+    for(i=0;i<results.length;i++)
+    {
+        resultData.push({
+            "courseId" : results[i]._id,
+            "courseName" : results[i].title
+        })
+    }
     return res.json({
-        results
+        resultData
     })
 })

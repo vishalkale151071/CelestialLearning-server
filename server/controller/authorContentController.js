@@ -220,9 +220,9 @@ exports.courseSections = asyncHandler(async (req, res) => {
         });
     }
 
-    const { courseId } = req.body;
+    const { title } = req.body;
 
-    const course = await Course.findOne({ _id: courseId });
+    const course = await Course.findOne({ title: title });
 
     const content = await Content.findOne(course.content._id);
 
@@ -277,7 +277,7 @@ exports.courseSections = asyncHandler(async (req, res) => {
 
         res.status(200);
         return res.json({
-            sections: sectionData,
+            sectionData
 
         });
     }
@@ -496,7 +496,7 @@ exports.showVideo = asyncHandler(async (req, res) => {
 })
 
 
-/*exports.trial = asyncHandler(async (req, res) => {
+exports.trial = asyncHandler(async (req, res) => {
 
     // const s3Client = new aws.S3({
     //     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -525,119 +525,54 @@ exports.showVideo = asyncHandler(async (req, res) => {
     // })
 
 
-    //const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-    //const ffmpeg = require('fluent-ffmpeg');
-    //ffmpeg.setFfmpegPath(ffmpegPath);
-    // open input stream
-    var infs = new ffmpeg
+    // const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+    // const ffmpeg = require('fluent-ffmpeg');
+    // ffmpeg.setFfmpegPath(ffmpegPath);
+    // // open input stream
+    // var infs = new ffmpeg
 
-    infs.addInput('https://celestiallearning.s3.amazonaws.com/6003f5ed51c397175752b206_preview.mp4').outputOptions([
-        '-map 0:0',
-        '-map 0:1',
-        '-map 0:0',
-        '-map 0:1',
-        '-s:v:0 2160x3840',
-        '-c:v:0 libx264',
-        '-b:v:0 2000k',
-        '-s:v:1 960x540',
-        '-c:v:1 libx264',
-        '-b:v:1 365k',
-        // '-var_stream_map', '"v:0,a:0 v:1,a:1"',
-        '-master_pl_name master.m3u8',
-        '-f hls',
-        '-max_muxing_queue_size 1024',
-        '-hls_time 1',
-        '-hls_list_size 0',
-        '-hls_segment_filename', 'v%v/fileSequence%d.ts'
-    ]).output('./video.m3u8')
-        .on('start', function (commandLine) {
-            console.log('Spawned Ffmpeg with command: ' + commandLine);
-        })
-        .on('error', function (err, stdout, stderr) {
-            console.log('An error occurred: ' + err.message, err, stderr);
-        })
-        .on('progress', function (progress) {
-            console.log('Processing: ' + progress.percent + '% done')
-        })
-        .on('end', function (err, stdout, stderr) {
-            console.log('Finished processing!')
+    // infs.addInput('https://celestiallearning.s3.amazonaws.com/aww/vgbg/hmjgu.mp4').outputOptions([
+    //     '-map 0:0',
+    //     '-map 0:1',
+    //     '-map 0:0',
+    //     '-map 0:1',
+    //     '-s:v:0 2160x3840',
+    //     '-c:v:0 libx264',
+    //     '-b:v:0 2000k',
+    //     '-s:v:1 960x540',
+    //     '-c:v:1 libx264',
+    //     '-b:v:1 365k',
+    //     // '-var_stream_map', '"v:0,a:0 v:1,a:1"',
+    //     // '-master_pl_name master.m3u8',
+    //     '-f hls',
+    //     '-max_muxing_queue_size 1024',
+    //     '-hls_time 1',
+    //     '-hls_list_size 0',
+    //     '-hls_segment_filename', 'v%v/fileSequence%d.ts'
+    // ]).output('./video.m3u8')
+    //     .on('start', function (commandLine) {
+    //         console.log('Spawned Ffmpeg with command: ' + commandLine);
+    //     })
+    //     .on('error', function (err, stdout, stderr) {
+    //         console.log('An error occurred: ' + err.message, err, stderr);
+    //     })
+    //     .on('progress', function (progress) {
+    //         console.log('Processing: ' + progress.percent + '% done')
+    //     })
+    //     .on('end', function (err, stdout, stderr) {
+    //         console.log('Finished processing!')
 
-        })
-        .run()
-    const s3 = new aws.S3();
-    const params = { Bucket: process.env.BUCKET_NAME, Key: `react-native/expo-setup/v0/`, ACL: 'public-read', Body: '/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/v0' };
-    s3.upload(params, (err, data) => {
-        if (err) {
-            console.log(err)
-        }
-        else {
-            console.log("uppdate");
-        }
-    })
-    <Panel header= {sectionData.sectionName} key={sectionData.sectionNumber}>
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel> 
-                    <Panel header="Section 2" key="2">
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel>
-                    <Panel header="Section 3" key="3">
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel>
-                    <Panel header="Section 4" key="4">
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel>
-                    <Panel header="Section 5" key="5">
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel>
-                    <Panel header="Section 6" key="6">
-                        <p>
-                            <a href="#vid">Video1</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video2</a>
-                        </p>
-                        <p>
-                            <a href="#vid">Video3</a>
-                        </p>
-                    </Panel>
-})*/
+    //     })
+    //     .run()
+    // const s3 = new aws.S3();
+    // const params = { Bucket: process.env.BUCKET_NAME, Key: `react-native/expo-setup/v0/`, ACL: 'public-read', Body: '/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/v0' };
+    // s3.upload(params, (err, data) => {
+    //     if (err) {
+    //         console.log(err)
+    //     }
+    //     else {
+    //         console.log("uppdate");
+    //     }
+    // })
+    
+})

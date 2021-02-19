@@ -3,7 +3,7 @@ const { Course } = require('../models/courseModel');
 const asyncHandler = require('express-async-handler')
 require('dotenv').config();
 
-//url : /getCourses
+//url : /home/getCourses
 exports.getCourses = asyncHandler(async(req,res)=>{
    
     const {category} = req.body;

@@ -38,12 +38,12 @@ app.use(session({
 }));
 
 console.log(`${__dirname}`)
-app.get('/api/favicon.ico', async (req, res) => {
+app.get('/favicon.ico', async (req, res) => {
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
 });
 
-app.get('/api/logo192.png', async (req, res) => {
+app.get('/logo192.png', async (req, res) => {
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
 });

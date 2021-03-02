@@ -4,6 +4,12 @@ const asyncHandler = require('express-async-handler');
 const { Author } = require("../models/authorModel");
 const aws = require('aws-sdk')
 const slug = require('slug')
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffmpeg = require('fluent-ffmpeg');
+ffmpeg.setFfmpegPath(ffmpegPath);
+const M3U8FileParser = require('m3u8-file-parser');
+const fs = require('fs');
+const {uploadDirectory} = require('s3-lambo')
 
 //url : author/create-course
 exports.createContent = asyncHandler(async (req, res) => {
@@ -256,7 +262,8 @@ exports.courseSections = asyncHandler(async (req, res) => {
 
                     var path = vdata.videoSlug;
                     path = path.split("_");
-                    const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`;
+                    videoN = path[2].split(".");
+                    const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${videoN[0]}.m3u8`;
                    
                     videoData.push({
                         "videoId": vdata._id,
@@ -290,6 +297,7 @@ exports.courseSections = asyncHandler(async (req, res) => {
     }
 });
 
+
 //url:  author/add-video
 exports.uploadVideo = asyncHandler(async (req, res) => {
 
@@ -306,7 +314,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 
     const vedioName = obj.vedioName
     const sectionId = obj.sectionId
-    //const { vedioName, sectionId } = req.body;
+    
     let myVideo = req.file.originalname.split(".");
     const fileExtension = myVideo[myVideo.length - 1];
 
@@ -356,7 +364,9 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
             {     
                 await Course.updateOne({ _id: course[0]._id }, { status: String(Number(statusField)+1) });
             }
-            
+            const url = `https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${path[2]}`;
+            console.log(url);
+            encryptVideo(url,path[0],path[1],path[2])
             res.status(200);
             return res.json({
                 message: `Video uploaded successfully`,
@@ -495,84 +505,99 @@ exports.showVideo = asyncHandler(async (req, res) => {
     
 })
 
-
-exports.trial = asyncHandler(async (req, res) => {
-
-    // const s3Client = new aws.S3({
-    //     accessKeyId: process.env.AWS_ACCESS_KEY,
-    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    // });
-
-    // const downloadParams = {
-    //     Bucket: process.env.BUCKET_NAME,
-    //     Key: `${path[0]}/${path[1]}/${path[2]}`,
-    // };
-
-    // s3Client.getObject(downloadParams, function (err, data) {
-    //     if (err) {
-    //         res.status(400);
-    //         return res.json({
-    //             message: `error => ${err}`
-    //         })
-    //     }
-    //     else {
-    //         res.status(200);
-    //         return res.json({
-    //             //message: `succsessful =>${data}`,
-    //             message: `https://celestiallearning.s3.amazonaws.com/blockchain/etherum/metamask.mp4`,
-    //         })
-    //     }
-    // })
-
-
-    // const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-    // const ffmpeg = require('fluent-ffmpeg');
-    // ffmpeg.setFfmpegPath(ffmpegPath);
-    // // open input stream
-    // var infs = new ffmpeg
-
-    // infs.addInput('https://celestiallearning.s3.amazonaws.com/aww/vgbg/hmjgu.mp4').outputOptions([
-    //     '-map 0:0',
-    //     '-map 0:1',
-    //     '-map 0:0',
-    //     '-map 0:1',
-    //     '-s:v:0 2160x3840',
-    //     '-c:v:0 libx264',
-    //     '-b:v:0 2000k',
-    //     '-s:v:1 960x540',
-    //     '-c:v:1 libx264',
-    //     '-b:v:1 365k',
-    //     // '-var_stream_map', '"v:0,a:0 v:1,a:1"',
-    //     // '-master_pl_name master.m3u8',
-    //     '-f hls',
-    //     '-max_muxing_queue_size 1024',
-    //     '-hls_time 1',
-    //     '-hls_list_size 0',
-    //     '-hls_segment_filename', 'v%v/fileSequence%d.ts'
-    // ]).output('./video.m3u8')
-    //     .on('start', function (commandLine) {
-    //         console.log('Spawned Ffmpeg with command: ' + commandLine);
-    //     })
-    //     .on('error', function (err, stdout, stderr) {
-    //         console.log('An error occurred: ' + err.message, err, stderr);
-    //     })
-    //     .on('progress', function (progress) {
-    //         console.log('Processing: ' + progress.percent + '% done')
-    //     })
-    //     .on('end', function (err, stdout, stderr) {
-    //         console.log('Finished processing!')
-
-    //     })
-    //     .run()
-    // const s3 = new aws.S3();
-    // const params = { Bucket: process.env.BUCKET_NAME, Key: `react-native/expo-setup/v0/`, ACL: 'public-read', Body: '/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/v0' };
-    // s3.upload(params, (err, data) => {
-    //     if (err) {
-    //         console.log(err)
-    //     }
-    //     else {
-    //         console.log("uppdate");
-    //     }
-    // })
-    
-})
+async function encryptVideo(url,courseName,sectionName,videoName)
+{
+    let ts = Date.now();
+    // encrypting video
+    var infs = new ffmpeg
+    await infs.addInput(url).outputOptions([
+        '-map 0:0',
+        '-map 0:1',
+        '-map 0:0',
+        '-map 0:1',
+        '-s:v:0 2160x3840',
+        '-c:v:0 libx264',
+        '-b:v:0 2000k',
+        '-s:v:1 960x540',
+        '-c:v:1 libx264',
+        '-b:v:1 365k',
+        '-f hls',
+        '-max_muxing_queue_size 1024',
+        '-hls_time 10',
+        '-hls_list_size 0',
+        '-hls_segment_filename', 'v%v/fileSequence%d.ts'
+    ]).output('./video.m3u8')
+        .on('start', function (commandLine) {
+            console.log('Spawned Ffmpeg with command: ' + commandLine);
+        })
+        .on('error', function (err, stdout, stderr) {
+            console.log('An error occurred: ' + err.message, err, stderr);
+        })
+        .on('progress', function (progress) {
+            console.log('Processing: ' + progress.percent + '% done')
+        })
+        .on('end', function (err, stdout, stderr) {  
+                fs.rename('./v0',`./${ts}`,function(error,data){
+                    if(error)
+                    {
+                        console.log(error)
+                    }
+                });
+            const content = fs.readFileSync('./video.m3u8', { encoding: 'utf-8'});
+            const reader = new M3U8FileParser();
+            reader.read(content);
+            const info = reader.getResult().segments; 
+            var temp = `#EXTM3U\n#EXT-X-VERSION:${reader.getResult().version}\n#EXT-X-TARGETDURATION:${reader.getResult().targetDuration}\n#EXT-X-MEDIA-SEQUENCE:${reader.getResult().mediaSequence}\n`
+            info.forEach((value,index,array)=>{
+                value.url = `https://celestiallearning.s3.amazonaws.com/chunks/${ts}/fileSequence${index}.ts\n`
+                console.log(value.inf.duration)
+                temp = temp+ `#EXTINF:${value.inf.duration},\n${value.url}`
+            })
+            temp = temp + '#EXT-X-ENDLIST'
+            fs.writeFile('./video.m3u8', temp, 'utf8', function (err) {
+                                if (err) return console.log(err);
+                            });
+                            const s3 = new aws.S3({
+                                credentials: {
+                                    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+                                }
+                            })
+                             videoName = videoName.split(".")
+                             //uploading m3u8 file
+                             fs.readFile('./video.m3u8', async (err, data) => {
+                                if (err) throw err;
+                                const params = {
+                                    Bucket: process.env.BUCKET_NAME, // pass your bucket name
+                                    Key: `${courseName}/${sectionName}/${videoName[0]}.m3u8`, // file will be saved as testBucket/contacts.csv
+                                    Body: data,
+                                    ACL: 'public-read'
+                                };
+                                await s3.upload(params, function(s3Err, data) {
+                                    if (s3Err) throw s3Err
+                                    console.log(`File uploaded successfully at ${data.Location}`)
+                                    
+                                });
+                             });
+                            // upload all ts files
+                            uploadDirectory({
+                                path: `/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/${ts}`,
+                                params: {
+                                  Bucket: process.env.BUCKET_NAME,
+                                },
+                                rootKey: `chunks/${ts}`
+                              }); 
+                                // deleting mp4 file from the directory.
+                                var params = {
+                                    Bucket: process.env.BUCKET_NAME,
+                                    Key: `${courseName}/${sectionName}/${videoName[0]}.mp4`
+                                };
+                                 s3.deleteObject(params, function(err, data) 
+                                {
+                                    if (err) 
+                                    console.log(err, err.stack);  // error
+                                    else     
+                                    console.log("deleted");                 // deleted
+                                });        
+        }).run        
+}

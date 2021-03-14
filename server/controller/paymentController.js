@@ -6,6 +6,7 @@ const { Author, AuthorProfile } = require("../models/authorModel");
 const shortid = require('shortid')
 const Razorpay = require('razorpay')
 const crypto = require('crypto')
+const {CourseTrack} = require("../models/progressModel")
 
 //url: /payment/process
 exports.payment = asyncHandler(async (req, res) => {
@@ -65,6 +66,7 @@ exports.verification = asyncHandler(async (req, res) => {
     const secret = '123456'
     
     const order = await Order.findOne({paymentId:req.body.payload.payment.entity.order_id});
+    console.log(order);
     const shasum = crypto.createHmac('sha256', secret)
     shasum.update(JSON.stringify(req.body))
     const digest = shasum.digest('hex')
@@ -91,6 +93,16 @@ exports.verification = asyncHandler(async (req, res) => {
             await Subscriber.update({ _id: order.subscriberId }, {subscribedCourses : subscribedCourses._id });
             await Order.update({_id:order._id},{status:req.body.payload.payment.entity.status}) // subscribed course id
           }
+          const courseTrack = new CourseTrack({
+
+            subscriberId : subscriber._id,
+            courseCompleted : false,
+            
+            
+         })
+         
+         const {_id  } = await courseTrack.save();
+         console.log(_id)
         console.log('request is legit')
         
     } else {

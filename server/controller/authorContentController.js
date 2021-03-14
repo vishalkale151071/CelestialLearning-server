@@ -314,7 +314,7 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
 
     const vedioName = obj.vedioName
     const sectionId = obj.sectionId
-    
+    console.log(vedioName)
     let myVideo = req.file.originalname.split(".");
     const fileExtension = myVideo[myVideo.length - 1];
 
@@ -511,23 +511,24 @@ async function encryptVideo(url,courseName,sectionName,videoName)
     // encrypting video
     var infs = new ffmpeg
     await infs.addInput(url).outputOptions([
+        
         '-map 0:0',
-        '-map 0:1',
+        '-map 0:1?',
         '-map 0:0',
-        '-map 0:1',
+        '-map 0:1?',
         '-s:v:0 2160x3840',
-        '-c:v:0 libx264',
+        '-c:v:0 libx264',  
         '-b:v:0 2000k',
-        '-s:v:1 960x540',
+        '-s:v:1 960x540', 
         '-c:v:1 libx264',
         '-b:v:1 365k',
-        '-f hls',
-        '-max_muxing_queue_size 1024',
-        '-hls_time 10',
-        '-hls_list_size 0',
-        '-hls_segment_filename', 'v%v/fileSequence%d.ts'
-    ]).output('./video.m3u8')
-        .on('start', function (commandLine) {
+        '-f hls',    
+        '-max_muxing_queue_size 1024',   
+        '-hls_time 15',   
+        '-hls_list_size 0',  
+        '-hls_segment_filename', 'v%v/fileSequence%d.ts',
+        
+    ]).on('start', function (commandLine) {
             console.log('Spawned Ffmpeg with command: ' + commandLine);
         })
         .on('error', function (err, stdout, stderr) {
@@ -535,7 +536,7 @@ async function encryptVideo(url,courseName,sectionName,videoName)
         })
         .on('progress', function (progress) {
             console.log('Processing: ' + progress.percent + '% done')
-        })
+        }).output('./video.m3u8')
         .on('end', function (err, stdout, stderr) {  
                 fs.rename('./v0',`./${ts}`,function(error,data){
                     if(error)
@@ -581,7 +582,7 @@ async function encryptVideo(url,courseName,sectionName,videoName)
                              });
                             // upload all ts files
                             uploadDirectory({
-                                path: `/home/saumya/Desktop/Celestial Learning/CelestialLearning-server/${ts}`,
+                                path: `./${ts}`,
                                 params: {
                                   Bucket: process.env.BUCKET_NAME,
                                 },
@@ -598,6 +599,9 @@ async function encryptVideo(url,courseName,sectionName,videoName)
                                     console.log(err, err.stack);  // error
                                     else     
                                     console.log("deleted");                 // deleted
-                                });        
-        }).run        
+                                }); 
+                                // deleting files from local machine
+                                
+                                   
+        }).run()        
 }

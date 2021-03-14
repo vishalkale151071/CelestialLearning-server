@@ -17,6 +17,8 @@ const { logout } = require('./controller/logout');
 const homeRoutes = require('./routes/homeRoutes');
 const courseRoutes = require('./routes/courseRoutes')
 const paymentRoutes = require('./routes/paymentRoutes')
+const progressRoutes = require('./routes/progressRoutes')
+const assessmentRoutes = require('./routes/assessmentRoutes')
 connectDB();
 
 const app = express();
@@ -53,7 +55,8 @@ app.use('/home',homeRoutes);
 app.use('/course',courseRoutes);
 app.use('/payment',paymentRoutes);
 app.post('/logout', logout);
-
+app.use('/progress',progressRoutes);
+app.use('/assessment',assessmentRoutes);
 
 
 

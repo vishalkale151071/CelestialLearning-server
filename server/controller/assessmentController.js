@@ -45,8 +45,7 @@ exports.testDetail = asyncHandler(async(req,res)=>{
     const course = await Course.findOne({title:courseName})
     const section = await Section.findOne({sectionName})
     const test = await Test.findOne({$and : [{section:section._id},{course:course._id}]});
-    const email = req.session.email;
-    const subscriber = await Subscriber.findOne({email});
+    const email = req.session.email
     const author  = await Author.findOne({email});
     const testData = []
     for(i=0;i<test.questions.length;i++)
@@ -152,6 +151,9 @@ exports.courseList = asyncHandler(async(req,res)=>{
         courseList.push(course[i].title)
         
     };
+    courseList.sort(function (a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    })
     res.status(200);
     return res.json(
         {
@@ -170,6 +172,9 @@ exports.sectionList = asyncHandler(async(req,res)=>{
         const section = await Section.findOne({_id:content.section[i]});
         sectionList.push(section.sectionName)
     }
+    sectionList.sort(function (a, b) {
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    })
     res.status(200);
     return res.json({
         sectionList

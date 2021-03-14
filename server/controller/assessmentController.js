@@ -1,8 +1,9 @@
-const { Course, Section} = require('../models/courseModel');
+const { Course, Section,Content} = require('../models/courseModel');
 const asyncHandler = require('express-async-handler');
-const {Subscriber, SubscriberProfile} = require('../models/subscriberModel') 
+const {Subscriber} = require('../models/subscriberModel') 
+const {Author} = require('../models/authorModel')
 const {Test,Question, SubscriberResult} = require('../models/assessmentModel');
-const { subscribe } = require('../routes/assessmentRoutes');
+
 
 //url : assessment/createQuiz
 exports.createQuiz = asyncHandler(async(req,res)=>{
@@ -44,17 +45,24 @@ exports.testDetail = asyncHandler(async(req,res)=>{
     const course = await Course.findOne({title:courseName})
     const section = await Section.findOne({sectionName})
     const test = await Test.findOne({$and : [{section:section._id},{course:course._id}]});
+    const email = req.session.email;
+    const subscriber = await Subscriber.findOne({email});
+    const author  = await Author.findOne({email});
     const testData = []
     for(i=0;i<test.questions.length;i++)
     {
         const question = await Question.findOne({_id:test.questions[i]})
-        testData.push({
-            "questionType" : question.questionType,
-            "question" : question.question,
-            "options" : question.options,
-            "answers" : question.answer,
-            "numOpt" : question.numOpt
-        });
+        let q = {
+            questionType : question.questionType,
+            question : question.question,
+            options : question.options,
+            numOpt : question.numOpt
+        };
+        if(author)
+        {    
+                q["answers"] = question.answer
+        }
+        testData.push(q);    
     }
     return res.json({
         testData
@@ -121,7 +129,9 @@ exports.performanceAnalyser = asyncHandler(async(req,res)=>{
         for(j=0;j<result[i].subscriberResult.length;j++)
         {
             const subscriberResult = await SubscriberResult.findOne({$and:[{_id:result[i].subscriberResult[j]},{subscriber:subscriber._id}]})
+            const section = await Section.findOne({_id:result[i].section})
             analysisReport.push({
+                "sectionName" : section.sectionName,
                 "marks" : subscriberResult.marksScored,
                 "percentage" : subscriberResult.percentage
             })
@@ -130,4 +140,38 @@ exports.performanceAnalyser = asyncHandler(async(req,res)=>{
    return res.json({
        analysisReport
    })
+})
+
+exports.courseList = asyncHandler(async(req,res)=>{
+    const email = req.session.email;
+    const author = await Author.findOne({email});
+    const course = await Course.find({author:author._id});
+    const courseList = [];
+    for(i=0;i<course.length;i++)
+    {
+        courseList.push(course[i].title)
+        
+    };
+    res.status(200);
+    return res.json(
+        {
+            courseList
+        }
+    )
+})
+
+exports.sectionList = asyncHandler(async(req,res)=>{
+    const {courseName} = req.body;
+    const course = await Course.findOne({title:courseName});
+    const content = await Content.findOne({_id:course.content});
+    const sectionList = []
+    for(i=0;i<content.section.length;i++)
+    {
+        const section = await Section.findOne({_id:content.section[i]});
+        sectionList.push(section.sectionName)
+    }
+    res.status(200);
+    return res.json({
+        sectionList
+    })
 })

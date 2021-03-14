@@ -1,39 +1,28 @@
 const { Course, Section} = require('../models/courseModel');
 const asyncHandler = require('express-async-handler');
-const {Subscriber, SubscriberProfile} = require('../models/subscriberModel') 
+const {Subscriber} = require('../models/subscriberModel') 
 const {Test,Question, SubscriberResult} = require('../models/assessmentModel');
 const { subscribe } = require('../routes/assessmentRoutes');
 
 //url : assessment/createQuiz
 exports.createQuiz = asyncHandler(async(req,res)=>{
 
-    const {courseName,sectionName,questionType,question,allOptions,correctOption} = req.body;
-    const course = await Course.findOne({title:courseName})
-    const section = await Section.findOne({sectionName})
-    const test = await Test.findOne({$and : [{section:section._id},{course:course._id}]});
-    const questions = new Question({  
-        question,
-        questionType,
-        options : allOptions ,
-        answer : correctOption
+    const {courseName,sectionName, questions} = req.body;
+    const course = await Course.findOne({title:courseName});
+    const section = await Section.findOne({sectionName});
+
+    const newTest = new Test({
+        course: course._id,
+        section :section._id,
     });
-    questions.save();
-  
-    if(test)
-    {
-        await test.questions.push(questions._id);
-        await test.save();
-    }
-    else
-    {
-        const newTest = new Test({
-            course: course._id,
-            section :section._id
-        });
+    await newTest.save();
+    questions.forEach( async (question) => {
+        const q = new Question(question);
+        await q.save();
+        await newTest.questions.push(q._id);
         await newTest.save();
-        await newTest.questions.push(questions._id);
-        await newTest.save();
-    }
+    });
+    
     res.status(200);
     return res.json({
         message : "Successfully uploaded"    

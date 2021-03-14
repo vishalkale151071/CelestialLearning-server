@@ -8,20 +8,29 @@ const { subscribe } = require('../routes/assessmentRoutes');
 exports.createQuiz = asyncHandler(async(req,res)=>{
 
     const {courseName,sectionName, questions} = req.body;
-    const course = await Course.findOne({title:courseName});
-    const section = await Section.findOne({sectionName});
-
+    console.log(courseName,sectionName,questions)
+    const course = await Course.findOne({title:courseName})
+    const section = await Section.findOne({sectionName})
+    const test = await Test.findOne({$and:[{course:course._id},{section:section._id}]})
+    if(test)
+    {
+        res.status(404);
+        return res.json({
+            message : "A quiz is already uploaded"
+        })
+    }
     const newTest = new Test({
         course: course._id,
         section :section._id,
     });
     await newTest.save();
-    questions.forEach( async (question) => {
-        const q = new Question(question);
+    for(i=0;i<questions.length;i++)
+    {
+        const q = new Question(questions[i]);
         await q.save();
         await newTest.questions.push(q._id);
-        await newTest.save();
-    });
+    }
+    await newTest.save();
     
     res.status(200);
     return res.json({
@@ -43,7 +52,8 @@ exports.testDetail = asyncHandler(async(req,res)=>{
             "questionType" : question.questionType,
             "question" : question.question,
             "options" : question.options,
-            "answers" : question.answer
+            "answers" : question.answer,
+            "numOpt" : question.numOpt
         });
     }
     return res.json({

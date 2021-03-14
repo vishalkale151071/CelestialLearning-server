@@ -7,33 +7,31 @@ const { subscribe } = require('../routes/assessmentRoutes');
 //url : assessment/createQuiz
 exports.createQuiz = asyncHandler(async(req,res)=>{
 
-    const {courseName,sectionName,questionType,question,allOptions,correctOption} = req.body;
+    const {courseName,sectionName, questions} = req.body;
+    console.log(courseName,sectionName,questions)
     const course = await Course.findOne({title:courseName})
     const section = await Section.findOne({sectionName})
-    const test = await Test.findOne({$and : [{section:section._id},{course:course._id}]});
-    const questions = new Question({  
-        question,
-        questionType,
-        options : allOptions ,
-        answer : correctOption
-    });
-    questions.save();
-  
+    const test = await Test.findOne({$and:[{course:course._id},{section:section._id}]})
     if(test)
     {
-        await test.questions.push(questions._id);
-        await test.save();
+        res.status(404);
+        return res.json({
+            message : "A quiz is already uploaded"
+        })
     }
-    else
+    const newTest = new Test({
+        course: course._id,
+        section :section._id,
+    });
+    await newTest.save();
+    for(i=0;i<questions.length;i++)
     {
-        const newTest = new Test({
-            course: course._id,
-            section :section._id
-        });
-        await newTest.save();
-        await newTest.questions.push(questions._id);
-        await newTest.save();
+        const q = new Question(questions[i]);
+        await q.save();
+        await newTest.questions.push(q._id);
     }
+    await newTest.save();
+    
     res.status(200);
     return res.json({
         message : "Successfully uploaded"    
@@ -54,7 +52,8 @@ exports.testDetail = asyncHandler(async(req,res)=>{
             "questionType" : question.questionType,
             "question" : question.question,
             "options" : question.options,
-            "answers" : question.answer
+            "answers" : question.answer,
+            "numOpt" : question.numOpt
         });
     }
     return res.json({

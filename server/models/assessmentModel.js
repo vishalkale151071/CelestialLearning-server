@@ -18,6 +18,9 @@ const questionSchema = mongoose.Schema({
         type: String,
         required: true
     }],
+    numOpt : {
+        type:Number
+    }
 },
     {
         versionKey: false

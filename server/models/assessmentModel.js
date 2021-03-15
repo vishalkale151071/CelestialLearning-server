@@ -9,6 +9,9 @@ const questionSchema = mongoose.Schema({
         type: String,
         default: "single"
     },
+    numOpt : {
+        type: Number
+    },
     options: [
         {
             type: String

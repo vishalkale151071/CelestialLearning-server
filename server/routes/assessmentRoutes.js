@@ -28,7 +28,7 @@ router.get(
     '/courseList',isLoggedIn,
     [],courseList
 )
-router.get(
+router.post(
     '/sectionList' ,isLoggedIn,
     [
         check("courseName","Course Name should be provided").exists()

@@ -48,24 +48,35 @@ exports.testDetail = asyncHandler(async(req,res)=>{
     const email = req.session.email
     const author  = await Author.findOne({email});
     const testData = []
-    for(i=0;i<test.questions.length;i++)
+    if(test)
     {
-        const question = await Question.findOne({_id:test.questions[i]})
-        let q = {
-            questionType : question.questionType,
-            question : question.question,
-            options : question.options,
-            numOpt : question.numOpt
-        };
-        if(author)
-        {    
-                q["answers"] = question.answer
+        for(i=0;i<test.questions.length;i++)
+        {
+            const question = await Question.findOne({_id:test.questions[i]})
+            let q = {
+                questionType : question.questionType,
+                question : question.question,
+                options : question.options,
+                numOpt : question.numOpt
+            };
+            if(author)
+            {    
+                    q["answers"] = question.answer
+            }
+            testData.push(q);    
         }
-        testData.push(q);    
+        return res.json({
+            testData
+        })
     }
-    return res.json({
-        testData
-    })
+    else
+    {
+        res.status(404)
+        return res.json({
+            message : "You have not added any tests in this module."
+        })
+    }
+    
 })
 
 function arrayEquals(a, b) {

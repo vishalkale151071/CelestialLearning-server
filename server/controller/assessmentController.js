@@ -127,26 +127,75 @@ exports.testResponse = asyncHandler(async(req,res)=>{
 
 exports.performanceAnalyser = asyncHandler(async(req,res)=>{
     const {courseName} = req.body;
-    const email = req.session.email;
+    console.log(courseName)
+    const email = "saumyasinha38@gmail.com";
     const subscriber  = await Subscriber.findOne({email});
-    console.log(subscriber._id)
+    //console.log(subscriber._id)
     const course = await Course.findOne({title:courseName})
-    console.log(course._id)
+    //console.log(course._id)
     const result = await Test.find({course:course._id})
     const analysisReport = []
-    for(i=0;i<result.length;i++)
+    analysisReport.push(
+        // {
+        // "sectionName" : section.sectionName,
+        // "marks" : subscriberResult.marksScored,
+        // "percentage" : subscriberResult.percentage
+        // },
     {
-        for(j=0;j<result[i].subscriberResult.length;j++)
-        {
-            const subscriberResult = await SubscriberResult.findOne({$and:[{_id:result[i].subscriberResult[j]},{subscriber:subscriber._id}]})
-            const section = await Section.findOne({_id:result[i].section})
-            analysisReport.push({
-                "sectionName" : section.sectionName,
-                "marks" : subscriberResult.marksScored,
-                "percentage" : subscriberResult.percentage
-            })
-        }
-    }
+        "sectionName" : "Section 1",
+        "marks" : "56",
+        "percentage" : "56"
+    },
+    {
+        "sectionName" : "Section 2",
+        "marks" : "99",
+        "percentage" : "99"
+    },
+    {
+        "sectionName" : "Section 3",
+        "marks" : "78",
+        "percentage" : "78"
+    },
+    {
+        "sectionName" : "Section 4",
+        "marks" : "87",
+        "percentage" : "87"
+    })
+    // for(i=0;i<result.length;i++)
+    // {
+    //     for(j=0;j<result[i].subscriberResult.length;j++)
+    //     {
+    //         const subscriberResult = await SubscriberResult.findOne({$and:[{_id:result[i].subscriberResult[j]},{subscriber:subscriber._id}]})
+    //         const section = await Section.findOne({_id:result[i].section})
+    //         analysisReport.push(
+    //             // {
+    //             // "sectionName" : section.sectionName,
+    //             // "marks" : subscriberResult.marksScored,
+    //             // "percentage" : subscriberResult.percentage
+    //             // },
+    //         {
+    //             "sectionName" : "Section 1",
+    //             "marks" : "56",
+    //             "percentage" : "56"
+    //         },
+    //         {
+    //             "sectionName" : "Section 2",
+    //             "marks" : "99",
+    //             "percentage" : "99"
+    //         },
+    //         {
+    //             "sectionName" : "Section 3",
+    //             "marks" : "78",
+    //             "percentage" : "78"
+    //         },
+    //         {
+    //             "sectionName" : "Section 4",
+    //             "marks" : "87",
+    //             "percentage" : "87"
+    //         })
+    //     }
+    // }
+    console.log(analysisReport)
    return res.json({
        analysisReport
    })

@@ -7,6 +7,9 @@ const shortid = require('shortid')
 const Razorpay = require('razorpay')
 const crypto = require('crypto')
 const {CourseTrack} = require("../models/progressModel")
+const sgMail = require('@sendgrid/mail')
+require('dotenv').config();
+sgMail.setApiKey(process.env.SENDGRID_API)
 
 //url: /payment/process
 exports.payment = asyncHandler(async (req, res) => {
@@ -77,11 +80,11 @@ exports.verification = asyncHandler(async (req, res) => {
     if (digest === req.headers['x-razorpay-signature']) {
         
          const subscriber = await Subscriber.findOne({_id: order.subscriberId}); // susbcriber id
-        
+         const course = await Course.findOne({_id:order.courseId})
          if (subscriber.subscribedCourses) {
             
              const subscribedCourses = await SubscribedCourses.findOne({ _id: subscriber.subscribedCourses })
-
+            
              await subscribedCourses.courseId.push(order.courseId); // course id
              await subscribedCourses.save()
              await Order.update({_id:order._id},{status:req.body.payload.payment.entity.status})
@@ -100,14 +103,52 @@ exports.verification = asyncHandler(async (req, res) => {
             
             
          })
-         
          const {_id  } = await courseTrack.save();
-         console.log(_id)
+         console.log(subscriber.email);
+         console.log(course.title)
+
+         const emailData = {
+            from: process.env.EMAIL_FROM,
+            to: subscriber.email,
+            subject: 'Thank you for choosing us',
+            html: `
+                    <h3>Congratulations!! You have successsfully subscribed your course "<b>${course.title}</b>"</h3>
+                   
+                    Happy Learning!
+                  
+                  `
+        };
+        sgMail
+        .send(emailData)
+        .then(async sent => {
+            try {
+                
+                
+                console.log("susbcription mail sent");
+            }
+            catch (err) {
+                res.status(401)
+                console.log("eroro");
+                res.json({
+                    message: "Error",
+                })
+
+            }
+            return res.json({
+                message: `Email has been sent to ${subscriber.email}`
+            });
+        })
+        .catch(error => {
+            res.status(401)
+            return res.json({
+                message: "Error while sending activation link",
+            })
+        });
         console.log('request is legit')
         
     } else {
         
         console.log("request invalid")
     }
-    res.json({ status: 'ok' })
+    
 })

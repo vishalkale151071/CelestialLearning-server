@@ -71,7 +71,7 @@ const courseSchema = mongoose.Schema(
         price: {
             type: Number,
             required: false,
-            default: 0,
+            default: 500,
             
         },
         suitableFor: [{

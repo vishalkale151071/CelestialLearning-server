@@ -1,4 +1,4 @@
-const { Subscriber } = require("../models/subscriberModel")
+const { Subscriber, SubscribedCourses } = require("../models/subscriberModel")
 const { SubscriberProfile } = require("../models/subscriberModel")
 const asyncHandler = require('express-async-handler')
 const { validationResult } = require("express-validator")
@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken')
 const e = require("express")
 const { token } = require("morgan")
 const cookie = require('cookie-signature')
+const { Course } = require("../models/courseModel")
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 
@@ -364,3 +365,4 @@ exports.updatepassword = asyncHandler(async (req, res) => {
         }
     )
 })
+

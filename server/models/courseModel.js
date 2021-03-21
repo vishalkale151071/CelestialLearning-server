@@ -108,7 +108,11 @@ const courseSchema = mongoose.Schema(
         status : {
             type: String,
             default : "0"
-        }   
+        },
+        coupon : {
+            type:Boolean,
+            default : false
+        } 
     }, {
     versionKey: false,
 }

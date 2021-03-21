@@ -5,7 +5,8 @@ const {Subscriber, SubscribedCourses, Order, SubscriberProfile} = require('../mo
 const { Author, AuthorProfile } = require("../models/authorModel");
 const shortid = require('shortid')
 const Razorpay = require('razorpay')
-const crypto = require('crypto')
+const crypto = require('crypto');
+const { LiveSession } = require('../models/liveSessionModel');
 
 // url: subscriber/myCourses
 exports.myCourses  = asyncHandler(async(req,res)=>{
@@ -54,5 +55,21 @@ exports.myCourses  = asyncHandler(async(req,res)=>{
     
 })
 
+exports.meetingSubscriberView = asyncHandler(async(req,res) =>{
 
+    const email = req.session.email;
+    const subscriber = await Subscriber.findOne({email});
+    const subscribedCourses = await SubscribedCourses.findOne({_id:subscriber.subscribedCourses});
+    const data = []
+    for(i=0;i<subscribedCourses.courseId.length;i++)
+    {
+         const course = await Course.findOne({_id:subscribedCourses.courseId[i]})
+         const liveSession = await LiveSession.findOne({courseName:course.title});
+         data.push(liveSession)
+        
+    }
+    return res.json({
+        data
+    })
+})
 

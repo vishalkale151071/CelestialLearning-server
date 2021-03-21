@@ -9,7 +9,8 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 const M3U8FileParser = require('m3u8-file-parser');
 const fs = require('fs');
-const {uploadDirectory} = require('s3-lambo')
+const {uploadDirectory} = require('s3-lambo');
+const { LiveSession } = require('../models/liveSessionModel');
 
 //url : author/create-course
 exports.createContent = asyncHandler(async (req, res) => {
@@ -605,3 +606,45 @@ async function encryptVideo(url,courseName,sectionName,videoName)
                                    
         }).run()        
 }
+
+exports.priceCoupon = asyncHandler(async(req,res)=>{
+
+    const {price,coupon,courseId} = req.body;
+
+    await Course.updateOne({_id:courseId},{price:price,coupon:coupon});
+    res.status(200)
+    return res.json({
+        message : "Submit"
+    })
+})
+
+exports.liveSession = asyncHandler(async(req,res)=>{
+    const {meetingId,meetingName,password,courseName, date1} = req.body;
+    const email = req.session.email;
+    const author = await Author.findOne({email});
+    const liveSession = new LiveSession({
+        meetingId,
+        meetingName,
+        password,
+        courseName,
+        author:author._id,
+        //dateOfConduction : date1
+    })
+
+    await liveSession.save();
+    return res.json({
+        message : "Meeting details stored."
+    })
+
+})
+
+exports.meetingAuthorView = asyncHandler(async(req,res) =>{
+
+    const email = req.session.email;
+    const author = await Author.findOne({email});
+    const live = await LiveSession.find({author:author._id})
+    return res.json({ 
+        live
+    })
+
+})

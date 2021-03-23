@@ -4,7 +4,7 @@ const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/authorController');
 const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/authorProfile');
-const { createContent, createSection, myCourses, courseSections, uploadVideo, showVideo, thumbnailUpload, previewUpload} = require('../controller/authorContentController');
+const { createContent, createSection, myCourses, courseSections, uploadVideo, showVideo, thumbnailUpload, previewUpload, priceCoupon, liveSession, meetingAuthorView, uploadResources, getResources} = require('../controller/authorContentController');
 const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -169,7 +169,23 @@ router.post(
     '/profileImageView', isLoggedIn, [], profileImageView
 )
 
-// router.post(
-//     '/trial',[],trial
-// )
+router.post(
+    '/priceUpload',isLoggedIn,[],priceCoupon
+)
+
+router.post(
+    '/liveSession' ,isLoggedIn,[],liveSession
+)
+
+router.post(
+    '/getLive' ,isLoggedIn,[],meetingAuthorView
+)
+
+router.post(
+    '/uploadResources',isLoggedIn,uploadMultiple,[],uploadResources
+)
+
+router.post(
+    '/getResources',isLoggedIn,[],getResources
+)
 module.exports = router

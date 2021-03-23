@@ -28,6 +28,10 @@ const sectionSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Video'
     }],
+    resources: [{
+        type :String,
+
+    }],
     sectionSlug: {
         type: String
     }
@@ -71,7 +75,7 @@ const courseSchema = mongoose.Schema(
         price: {
             type: Number,
             required: false,
-            default: 0,
+            default: 500,
             
         },
         suitableFor: [{
@@ -108,7 +112,11 @@ const courseSchema = mongoose.Schema(
         status : {
             type: String,
             default : "0"
-        }   
+        },
+        coupon : {
+            type:Boolean,
+            default : false
+        } 
     }, {
     versionKey: false,
 }

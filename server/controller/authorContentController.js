@@ -9,7 +9,8 @@ const ffmpeg = require('fluent-ffmpeg');
 ffmpeg.setFfmpegPath(ffmpegPath);
 const M3U8FileParser = require('m3u8-file-parser');
 const fs = require('fs');
-const {uploadDirectory} = require('s3-lambo')
+const {uploadDirectory} = require('s3-lambo');
+const { LiveSession } = require('../models/liveSessionModel');
 
 //url : author/create-course
 exports.createContent = asyncHandler(async (req, res) => {
@@ -375,6 +376,66 @@ exports.uploadVideo = asyncHandler(async (req, res) => {
     })
 });
 
+//url : author/uploadResources
+exports.uploadResources = asyncHandler(async(req,res)=>{
+
+    const obj = JSON.parse(JSON.stringify(req.body));
+    const sectionId = obj.sectionId
+    const s3 = new aws.S3({
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+        }
+    })
+    for(i=0;i<req.files.length;i++)
+    {
+        let myPdf = req.files[i].originalname;
+        const section = await Section.findOne({_id:sectionId});
+        const path = section.sectionSlug.split("_")
+        
+        await section.resources.push(myPdf)
+        await section.save();
+        
+        const params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: `${path[0]}/${path[1]}/${myPdf}`,
+            Body: req.files[i].buffer,
+            ACL: 'public-read'
+        }
+        s3.upload(params, async(error, data) => {
+            if (error) {
+                res.status(401);
+                return res.json({
+                    message: `Error while uploading`,
+                })
+            }
+            else {
+                console.log("Files uploaded successfully.");
+            }
+        })
+    }
+   
+    return res.json({
+        message : "done"
+    })
+
+})
+//url : author/getResources
+exports.getResources = asyncHandler(async(req,res)=>{
+
+    const {sectionId} = req.body;
+    const section = await Section.findOne({_id:sectionId});
+    const path = section.sectionSlug.split("_")
+    const data = []
+    for(i=0;i<section.resources.length;i++)
+    {
+        const pdfName = section.resources[i];
+        data.push(`https://celestiallearning.s3.amazonaws.com/${path[0]}/${path[1]}/${pdfName}`)
+    }
+    return res.json({
+        data
+    })
+})
 //url:  author/uploadThumbnail
 exports.thumbnailUpload = asyncHandler(async (req, res) => {
 
@@ -605,3 +666,45 @@ async function encryptVideo(url,courseName,sectionName,videoName)
                                    
         }).run()        
 }
+
+exports.priceCoupon = asyncHandler(async(req,res)=>{
+
+    const {price,coupon,courseId} = req.body;
+
+    await Course.updateOne({_id:courseId},{price:price,coupon:coupon});
+    res.status(200)
+    return res.json({
+        message : "Submit"
+    })
+})
+
+exports.liveSession = asyncHandler(async(req,res)=>{
+    const {meetingId,meetingName,password,courseName, date1} = req.body;
+    const email = req.session.email;
+    const author = await Author.findOne({email});
+    const liveSession = new LiveSession({
+        meetingId,
+        meetingName,
+        password,
+        courseName,
+        author:author._id,
+        //dateOfConduction : date1
+    })
+
+    await liveSession.save();
+    return res.json({
+        message : "Meeting details stored."
+    })
+
+})
+
+exports.meetingAuthorView = asyncHandler(async(req,res) =>{
+
+    const email = req.session.email;
+    const author = await Author.findOne({email});
+    const live = await LiveSession.find({author:author._id})
+    return res.json({ 
+        live
+    })
+
+})

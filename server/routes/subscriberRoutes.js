@@ -4,7 +4,7 @@ const { check } = require("express-validator");
 const multer = require('multer');
 const { register, verify, login, forgetpassword, forgetpasswordverify, updatepassword } = require('../controller/subscriberController');
 const { profile, update, emailChange, verify1, passwordChange, profileImageUpdate, profileImageView } = require('../controller/subscriberProfile');
-const { myCourses } = require('../controller/subscriberContentController');
+const { myCourses ,meetingSubscriberView} = require('../controller/subscriberContentController');
 const { isLoggedIn } = require('../middleware/isLoggedInmiddleware');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -108,5 +108,9 @@ router.post(
 router.get(
     '/myCourses',
     [],myCourses
+)
+
+router.post(
+    '/getMeeting',isLoggedIn,[],meetingSubscriberView
 )
 module.exports = router

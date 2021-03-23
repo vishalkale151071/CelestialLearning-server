@@ -58,43 +58,25 @@ exports.myCourses  = asyncHandler(async(req,res)=>{
 exports.meetingSubscriberView = asyncHandler(async(req,res) =>{
 
     const email = req.session.email;
-    console.log(email)
+   
     const subscriber = await Subscriber.findOne({email});
     const subscribedCourses = await SubscribedCourses.findOne({_id:subscriber.subscribedCourses});
     const data = []
     const courseIdArray = subscribedCourses.courseId
-    
-    async function iterate(item, index, array) {
-        
-        const course = await Course.findOne({_id:item})
+    var i =0;
+    while(i<courseIdArray.length)
+    {
+        const course = await Course.findOne({_id:courseIdArray[i]});
         const liveSession = await LiveSession.findOne({courseName:course.title});
-        //console.log(liveSession)
         if(liveSession)
         {
             data.push(liveSession)
         }
-            
-        if (index === array.length - 1) {
-            if(liveSession)
-            {
-                data.push(liveSession)
-            }
-            console.log(data)
-            console.log('The last iteration!');
-        }
-      }
-      courseIdArray.forEach( 
-          iterate
-      );
-    // for(i=0;i<subscribedCourses.courseId.length;i++)
-    // {
-    //      
-        
-    // }
-    // console.log(data)
-    // res.status(200)
-    // return res.json({
-    //     message : data
-    // })
+        i = i+1;
+    }
+    res.status(200)
+    return res.json({
+        message : data
+    })
 })
 

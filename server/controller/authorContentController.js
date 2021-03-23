@@ -704,7 +704,7 @@ exports.meetingAuthorView = asyncHandler(async(req,res) =>{
     const author = await Author.findOne({email});
     const live = await LiveSession.find({author:author._id})
     return res.json({ 
-        live
+        message :live
     })
 
 })

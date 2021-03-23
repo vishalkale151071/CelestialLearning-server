@@ -28,6 +28,10 @@ const sectionSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Video'
     }],
+    resources: [{
+        type :String,
+
+    }],
     sectionSlug: {
         type: String
     }

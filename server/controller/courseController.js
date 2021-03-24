@@ -6,6 +6,7 @@ const { Author, AuthorProfile } = require("../models/authorModel");
 const shortid = require('shortid')
 const Razorpay = require('razorpay')
 const crypto = require('crypto')
+const {Feedback} = require('../models/assessmentModel')
 
 //url: /course/details
 exports.courseDetails = asyncHandler(async (req, res) => {
@@ -46,4 +47,32 @@ exports.courseDetails = asyncHandler(async (req, res) => {
         courseThumbnail: `https://celestiallearning.s3.amazonaws.com/${course.courseSlug}/${course._id}_thumbnail.${course.thumbnailExtension}`,
         coursePreview: `https://celestiallearning.s3.amazonaws.com/${course.courseSlug}/${course._id}_preview.${course.previewExtension}`
     })
+})
+
+//url : course/feeback
+exports.acceptFeedback = asyncHandler(async(req,res)=>{
+
+    const {courseName, feedback, stars} = req.body;
+    const email = req.session.email;
+    const subscriber = await Subscriber.findOne({email})
+    const oldFeedback = await Feedback.find({$and:[{subscriber:subscriber._id},{courseName}]})
+    if(oldFeedback.length>0)
+    {
+        res.status(200)
+        return res.json({
+            alert: "You have already submitted the review.Thanks!"
+        })
+    }
+    const feedbackObject = new Feedback({
+        courseName,
+        feedback,
+        stars,
+        subscriber : subscriber._id
+    })
+    await feedbackObject.save();
+    res.status(200)
+    return res.json({
+        message : "Feedback is submitted"
+    })
+
 })

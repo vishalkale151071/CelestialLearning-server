@@ -244,18 +244,39 @@ exports.courseSections = asyncHandler(async (req, res) => {
             const sdata = await Section.findOne({ _id: sections[i] });
 
             const videos = sdata.video;
+            const resources = sdata.resources;
 
 
             if (videos.length == 0) {
-                sectionData.push({
-                    "sectionId": sdata._id,
-                    "number": sdata.number,
-                    "sectionName": sdata.sectionName,
-                    "videoId": "NIL",
-                    "videoName": "NIL"
-                })
+
+                if(resources.length == 0)
+                {
+                    sectionData.push({
+                        "sectionId": sdata._id,
+                        "number": sdata.number,
+                        "sectionName": sdata.sectionName,
+                        "videoId": "NIL",
+                        "videoName": "NIL",
+                        "resources" : "Empty"
+                    })
+                }
+                else
+                {
+
+                    sectionData.push({
+                        "sectionId": sdata._id,
+                        "number": sdata.number,
+                        "sectionName": sdata.sectionName,
+                        "videoId": "NIL",
+                        "videoName": "NIL",
+                        "resources" : resources
+                    })
+                }
+                
             }
             else {
+
+
                 const videoData = []
                 for (j = 0; j < videos.length; j++) {
 
@@ -273,12 +294,27 @@ exports.courseSections = asyncHandler(async (req, res) => {
                     })
 
                 }
-                sectionData.push({
-                    "sectionId": sdata._id,
-                    "number": sdata.number,
-                    "sectionName": sdata.sectionName,
-                    "video": videoData,
-                })
+                if(resources.length==0)
+                {
+                    sectionData.push({
+                        "sectionId": sdata._id,
+                        "number": sdata.number,
+                        "sectionName": sdata.sectionName,
+                        "video": videoData,
+                        "resources" : "Empty"
+                    })
+                }
+                else
+                {
+                    sectionData.push({
+                        "sectionId": sdata._id,
+                        "number": sdata.number,
+                        "sectionName": sdata.sectionName,
+                        "video": videoData,
+                        "resources" : resources
+                    })
+                }
+                
                
             }
         }

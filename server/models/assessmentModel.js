@@ -86,4 +86,25 @@ const testSchema = mongoose.Schema({
 
 const Test = new mongoose.model('Test', testSchema)
 
-module.exports = { Question: Question, Test: Test, SubscriberResult: SubscriberResult}
+const feedbackSchema = mongoose.Schema({
+    courseName : {
+        type : String
+    },
+    stars : {
+        type : Number
+    },
+    feedback : {
+        type :String
+    },
+    subscriber : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'Subscriber'
+    }
+},{
+    versionKey :false
+})
+
+const Feedback = new mongoose.model('Feedback',feedbackSchema)
+
+
+module.exports = { Question: Question, Test: Test, SubscriberResult: SubscriberResult, Feedback:Feedback}

@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator")
 const sgMail = require('@sendgrid/mail')
 const passwordStrength = require('check-password-strength')
 const jwt = require('jsonwebtoken')
+const { Admin } = require("../models/adminModel")
 require('dotenv').config();
 sgMail.setApiKey(process.env.SENDGRID_API)
 
@@ -125,36 +126,28 @@ exports.verify = asyncHandler(async (req, res) => {
 
     const { email } = jwt.decode(req.token);
     const author = await Author.findOne({ email });
-    if (author) {
-        if (author.status == "Inactive") {
-            const filter = { email: email }
-            const update = { status: "Active" }
-
-            Author.findOneAndUpdate(filter, update,
-                {
-                    useFindAndModify: false,
-                    new: true
-                },
-                (err, doc) => {
-                    if (err) {
-                        console.log(err)
-                        res.status(401)
-                        return res.json({
-                            message: "Unregistered token."
-                        })
-                    }
-                    else {
-                        if (doc) {
-                            res.status(200)
-                            return res.json({ message: "Author Activated." })
-                        }
-                        else {
-                            res.status(401)
-                            return res.json({ message: "Unregistered Token." })
-                        }
-                    }
-                }
-            )
+    if (author) 
+    {
+        if (author.status == "Inactive") 
+        {
+            const admin = await Admin.findOne({email:"saumyasinhatest@gmail.com"});
+            console.log(admin)
+            if(admin.pendingAuthors.includes(author._id))
+            {
+                res.status(200)
+                return res.json({
+                    message :"You have already requested.It will take 24-48 hours to get approved."
+                })
+            }
+            admin.pendingAuthors.push(author._id);
+            await admin.save();
+            // admin ko ek mail send karna hai. to notify ki author ne request ki hai.
+            //ya phir bell notification use kar sakte hai.
+            res.status(200)
+            return res.json({
+                message : "Your email address has been verified successfully. Your request has been sent to the admin. It will take 24-48 hours to get approved. Once approved you will get an email. Thank you for trusting us!!!"
+            })
+            
         }
         else {
             res.status(401)

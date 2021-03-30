@@ -66,6 +66,14 @@ const authorSchema = mongoose.Schema(
       required: true,
       default: "Inactive",
     },
+    paymentPercentage : {
+      type : Number,
+      default : 0
+    },
+    tempPassword : {
+      type : String,
+      default : ''
+    },
     profile_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "AuthorProfile"

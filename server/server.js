@@ -21,6 +21,7 @@ const progressRoutes = require('./routes/progressRoutes')
 const assessmentRoutes = require('./routes/assessmentRoutes')
 const analysisRoutes = require('./routes/analysisRoutes');
 const discussionRoutes = require('./routes/discussionRoutes')
+const adminRoutes = require('./routes/adminRoutes')
 connectDB();
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/progress',progressRoutes);
 app.use('/assessment',assessmentRoutes);
 app.use('/analysis',analysisRoutes);
 app.use('/discussion',discussionRoutes);
+app.use('/admin',adminRoutes);
 
 
 

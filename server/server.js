@@ -39,6 +39,7 @@ app.use(session({
     })
 }));
 
+console.log(`${__dirname}`)
 app.get('/favicon.ico', async (req, res) => {
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
@@ -48,15 +49,14 @@ app.get('/logo192.png', async (req, res) => {
     res.status(200);
     res.sendFile(`${__dirname}/CL.png`);
 });
-app.use('/subscriber', subscriberRoutes);
-app.use('/author', authorRoutes);
-app.use('/plugin', pluginRoutes);
-app.use('/home',homeRoutes);
-app.use('/course',courseRoutes);
-app.use('/payment',paymentRoutes);
-app.post('/logout', logout);
-app.use('/progress',progressRoutes);
-app.use('/assessment',assessmentRoutes);
+app.use('/api/subscriber', subscriberRoutes);
+app.use('/api/author', authorRoutes);
+app.use('/api/plugin', pluginRoutes);
+app.use('/api/home',homeRoutes);
+app.use('/api/course',courseRoutes);
+app.use('/api/payment',paymentRoutes);
+app.post('/api/logout', logout);
+
 
 
 

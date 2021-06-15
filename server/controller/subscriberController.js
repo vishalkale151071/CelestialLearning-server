@@ -111,6 +111,7 @@ exports.register = asyncHandler(async (req, res) => {
             res.status(400)
             return res.json({
                 message: "Error while sending activation link",
+                error: error
             })
         });
 })

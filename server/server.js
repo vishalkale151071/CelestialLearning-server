@@ -17,6 +17,8 @@ const { logout } = require('./controller/logout');
 const homeRoutes = require('./routes/homeRoutes');
 const courseRoutes = require('./routes/courseRoutes')
 const paymentRoutes = require('./routes/paymentRoutes')
+const progressRoutes = require('./routes/progressRoutes')
+const assessmentRoutes = require('./routes/assessmentRoutes')
 connectDB();
 
 const app = express();
